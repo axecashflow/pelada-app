@@ -1,0 +1,12 @@
+export enum PlayerPosition {
+  GOALKEEPER = "GOALKEEPER",
+  DEFENDER = "DEFENDER",
+  MIDFIELDER = "MIDFIELDER",
+  FORWARD = "FORWARD",
+}
+
+export enum PlayerPresenceInMatch {
+  STARTER = "STARTER",
+  SUBSTITUTED_IN = "SUBSTITUTED_IN",
+  SUBSTITUTED_OUT = "SUBSTITUTED_OUT",
+}
