@@ -1,14 +1,15 @@
-import { MatchRepository } from '@/app/domain/matches/repositories/MatchRepository';
-import { Match } from '@/app/domain/matches/aggregates/Match';
-import { Team } from '@/app/domain/matches/aggregates/Team';
-import { Player } from '@/app/domain/matches/entities/Player';
-import { MatchId } from '@/app/domain/matches/value-objects/MatchId';
-import { TeamId } from '@/app/domain/matches/value-objects/TeamId';
-import { PlayerId } from '@/app/domain/matches/value-objects/PlayerId';
-import { GroupId } from '@/app/domain/group/value-objects/GroupId';
-import { StatTypeEnum } from '@/app/domain/matches/enum/Stats';
-import { PlayerPosition } from '@/app/domain/matches/enum/Player';
-import { DomainError } from '@/app/domain/shared/DomainError';
+import { MatchRepository } from "@/app/domain/matches/repositories/MatchRepository";
+import { Match } from "@/app/domain/matches/aggregates/Match";
+import { Team } from "@/app/domain/matches/aggregates/Team";
+import { Player } from "@/app/domain/matches/entities/Player";
+import { MatchId } from "@/app/domain/matches/value-objects/MatchId";
+import { TeamId } from "@/app/domain/matches/value-objects/TeamId";
+import { PlayerId } from "@/app/domain/matches/value-objects/PlayerId";
+import { GroupId } from "@/app/domain/group/value-objects/GroupId";
+import { StatTypeEnum } from "@/app/domain/matches/enum/Stats";
+import { PlayerPosition } from "@/app/domain/matches/enum/Player";
+import { DomainError } from "@/app/domain/shared/DomainError";
+import { PlayerViewModelType } from "../view-models/types";
 
 type PlayerInput = {
   id: string;
@@ -37,7 +38,7 @@ type RecordEventInput = {
 };
 
 export class MatchService {
-  constructor(private readonly matchRepository: MatchRepository) { }
+  constructor(private readonly matchRepository: MatchRepository) {}
 
   async createMatch(input: CreateMatchInput): Promise<void> {
     const teamA = Team.create(TeamId.create(input.teamA.id));
@@ -46,7 +47,7 @@ export class MatchService {
     input.teamA.players.forEach((playerData) => {
       const player = Player.create(
         PlayerId.create(playerData.id),
-        playerData.name
+        playerData.name,
       );
       teamA.addPlayer(player);
     });
@@ -54,7 +55,7 @@ export class MatchService {
     input.teamB.players.forEach((playerData) => {
       const player = Player.create(
         PlayerId.create(playerData.id),
-        playerData.name
+        playerData.name,
       );
       teamB.addPlayer(player);
     });
@@ -63,7 +64,7 @@ export class MatchService {
       MatchId.create(input.id),
       GroupId.create(input.groupId),
       teamA,
-      teamB
+      teamB,
     );
 
     await this.matchRepository.save(match);
@@ -81,7 +82,7 @@ export class MatchService {
     const match = await this.matchRepository.findById(input.matchId);
 
     if (!match) {
-      throw new DomainError('MatchNotFound');
+      throw new DomainError("MatchNotFound");
     }
 
     const playerId = PlayerId.create(input.playerId);
@@ -93,7 +94,7 @@ export class MatchService {
       playerId,
       input.statType,
       opponentPlayerId,
-      input.playerPosition
+      input.playerPosition,
     );
 
     await this.matchRepository.save(match);
@@ -108,7 +109,7 @@ export class MatchService {
     const match = await this.matchRepository.findById(matchId);
 
     if (!match) {
-      throw new DomainError('MatchNotFound');
+      throw new DomainError("MatchNotFound");
     }
 
     for (const event of events) {
@@ -121,8 +122,43 @@ export class MatchService {
         playerId,
         event.statType,
         opponentPlayerId,
-        event.playerPosition
+        event.playerPosition,
       );
+    }
+
+    await this.matchRepository.save(match);
+  }
+
+  async substitutePlayer(
+    matchId: string,
+    teamId: string,
+    playerOut: PlayerViewModelType,
+    playerIn: PlayerViewModelType,
+  ): Promise<void> {
+    const match = await this.matchRepository.findById(matchId);
+
+    if (!match) {
+      throw new DomainError("MatchNotFound");
+    }
+
+    const playerInEntity = Player.create(
+      PlayerId.create(playerIn.id),
+      playerIn.name,
+    );
+    
+    const playerOutEntity = Player.create(
+      PlayerId.create(playerOut.id),
+      playerOut.name,
+    );
+
+    if (!playerOutEntity || !playerInEntity) {
+      throw new DomainError("PlayerNotFoundInTeam");
+    }
+
+    if (teamId === "teamA") {
+      match.substitutePlayerInTeamA(playerOutEntity, playerInEntity);
+    } else {
+      match.substitutePlayerInTeamB(playerOutEntity, playerInEntity);
     }
 
     await this.matchRepository.save(match);

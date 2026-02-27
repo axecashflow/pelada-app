@@ -1,63 +1,126 @@
-'use client';
+"use client";
 
-import { useState, useEffect } from 'react';
-import { motion } from 'framer-motion';
-import { ArrowLeft, Check } from 'lucide-react';
-import { useParams, useRouter } from 'next/navigation';
+import { useState, useEffect } from "react";
+import { motion } from "framer-motion";
+import { ArrowLeft, Check } from "lucide-react";
+import { useParams, useRouter } from "next/navigation";
 
-import { MatchViewModelType } from '@/app/application/matches/view-models/types';
-import { useToast } from '@/app/ui/hooks/use-toast';
-import { cn, domainErrorMessages } from '@/app/ui/lib/utils';
-import { DomainErrorName } from '@/app/domain/shared/DomainError';
+import {
+  MatchViewModelType,
+  PlayerViewModelType,
+} from "@/app/application/matches/view-models/types";
 
-import AddGoalsInsideBox from './components/AddGoalsInsideBox';
+import { useToast } from "@/app/ui/hooks/use-toast";
+import { cn, domainErrorMessages } from "@/app/ui/lib/utils";
+import { DomainErrorName } from "@/app/domain/shared/DomainError";
+import { SportButton } from "@/app/ui/components/SportButton";
+import { GroupViewModelType } from "@/app/application/group/view-models/types";
+import { PlayerPresenceInMatch } from "@/app/domain/matches/enum/Player";
 
-import { getMatchById, recordMatchEvents } from './actions';
-import { LiveMatchProps, RecordEventInputType, TeamId } from './types';
-import { countGoalsFromTeam, getPlayerStats, getTeamPlayers, statCategories, StatCategoryTagType } from './utils';
+import {
+  getMatchById,
+  recordMatchEvents,
+  getGroupDetails,
+  substitutePlayer,
+} from "./actions";
 
-import PlayerMatchCard from '../../../ui/components/PlayerMatchCard';
-import AddGoalsOutsideBox from './components/AddGoalsOutsideBox';
-import ShotHitPost from './components/ShotHitPost';
-import Tackle from './components/Tackle';
-import DribbleFailed from './components/DribbleFailed';
-import DribbleSuccess from './components/DribbleSuccess';
-import BigChanceMissed from './components/BigChanceMissed';
-import FoulCommited from './components/FoulCommited';
-import ShotOnTarget from './components/ShotOnTarget';
-import ShotOffTarget from './components/ShotOffTarget';
-import BigChanceCreated from './components/BigChanceCreated';
-import PassCompleted from './components/PassCompleted';
-import PassFailed from './components/PassFailed';
-import DuelWon from './components/DuelWon';
-import OwnGoal from './components/OwnGoal';
-import { SportButton } from '@/app/ui/components/SportButton';
+import {
+  LiveMatchProps,
+  RecordEventInputType,
+  SubstitutionFormType,
+  TeamId,
+} from "./types";
+
+import {
+  countGoalsFromTeam,
+  getPlayerStats,
+  getTeamPlayers,
+  statCategories,
+  StatCategoryTagType,
+} from "./utils";
+
+import AddGoalsInsideBox from "./components/AddGoalsInsideBox";
+import PlayerMatchCard from "../../../ui/components/PlayerMatchCard";
+import AddGoalsOutsideBox from "./components/AddGoalsOutsideBox";
+import ShotHitPost from "./components/ShotHitPost";
+import Tackle from "./components/Tackle";
+import DribbleFailed from "./components/DribbleFailed";
+import DribbleSuccess from "./components/DribbleSuccess";
+import BigChanceMissed from "./components/BigChanceMissed";
+import FoulCommited from "./components/FoulCommited";
+import ShotOnTarget from "./components/ShotOnTarget";
+import ShotOffTarget from "./components/ShotOffTarget";
+import BigChanceCreated from "./components/BigChanceCreated";
+import PassCompleted from "./components/PassCompleted";
+import PassFailed from "./components/PassFailed";
+import DuelWon from "./components/DuelWon";
+import OwnGoal from "./components/OwnGoal";
+import SubstitutionPanel from "./components/SubstitutionPanel";
 
 export default function LiveMatch() {
   const router = useRouter();
   const params = useParams<LiveMatchProps>();
   const { toast } = useToast();
 
-  const [activeCategory, setActiveCategory] = useState<StatCategoryTagType>('goal');
-  const [currentMatch, setCurrentMatch] = useState<MatchViewModelType | null>(null);
+  const [activeCategory, setActiveCategory] =
+    useState<StatCategoryTagType>("goal");
+
+  const [currentMatch, setCurrentMatch] = useState<MatchViewModelType | null>(
+    null,
+  );
+
+  const [currentGroup, setCurrentGroup] = useState<GroupViewModelType | null>(
+    null,
+  );
+
   const [loading, setLoading] = useState(true);
 
   const teamPlayers = (team: TeamId) => getTeamPlayers(team, currentMatch);
-  const teamLabel = (team: TeamId) => (team === 'teamA' ? 'Time A' : 'Time B');
+  const teamLabel = (team: TeamId) => (team === "teamA" ? "Time A" : "Time B");
 
-  const teamAPlayers = teamPlayers('teamA');
-  const teamBPlayers = teamPlayers('teamB');
+  const teamAPlayers = teamPlayers("teamA");
+  const teamBPlayers = teamPlayers("teamB");
+
+  const bench: PlayerViewModelType[] = (currentGroup?.members ?? [])
+    .filter(
+      (member) =>
+        !teamAPlayers.some((player) => player.id === member.id) &&
+        !teamBPlayers.some((player) => player.id === member.id),
+    )
+    .map((member) => ({
+      id: member.id,
+      name: member.name,
+      presence: PlayerPresenceInMatch.SUBSTITUTED_IN,
+      rating: 6,
+    }));
 
   const teamIcon = (playerId: string) => {
-    if (teamAPlayers.some(player => player.id === playerId)) {
-      return '🟢';
+    if (teamAPlayers.some((player) => player.id === playerId)) {
+      return "🟢";
     }
 
-    if (teamBPlayers.some(player => player.id === playerId)) {
-      return '🔵';
+    if (teamBPlayers.some((player) => player.id === playerId)) {
+      return "🔵";
     }
 
-    return '';
+    return "";
+  };
+
+  const handleGetGroupDetails = async () => {
+    try {
+      const response = await getGroupDetails(currentMatch!.groupId);
+
+      setCurrentGroup(response);
+    } catch (error) {
+      toast({
+        title: "Erro",
+        description:
+          "Não foi possível carregar os grupos. Tente novamente mais tarde.",
+        variant: "destructive",
+      });
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleGetMatch = async () => {
@@ -67,9 +130,9 @@ export default function LiveMatch() {
       setCurrentMatch(match);
     } catch (error) {
       toast({
-        title: 'Erro',
-        description: 'Não foi possível carregar os dados da partida.',
-        variant: 'destructive',
+        title: "Erro",
+        description: "Não foi possível carregar os dados da partida.",
+        variant: "destructive",
       });
     } finally {
       setLoading(false);
@@ -84,16 +147,46 @@ export default function LiveMatch() {
 
       await handleGetMatch();
     } catch (error) {
-      const defaultMessage = 'Erro ao criar estatística da partida. Tente novamente.';
+      const defaultMessage =
+        "Erro ao criar estatística da partida. Tente novamente.";
 
-      const errorMessage = error instanceof Error
-        ? domainErrorMessages[error.message as DomainErrorName] ?? defaultMessage
-        : defaultMessage;
+      const errorMessage =
+        error instanceof Error
+          ? (domainErrorMessages[error.message as DomainErrorName] ??
+            defaultMessage)
+          : defaultMessage;
 
       toast({
-        title: 'Erro',
+        title: "Erro",
         description: errorMessage,
-        variant: 'destructive',
+        variant: "destructive",
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleSubstitution = async (substitution: SubstitutionFormType) => {
+    setLoading(true);
+
+    try {
+      await substitutePlayer(currentMatch!.id, substitution);
+
+      await handleGetMatch();
+    } catch (error) {
+      const defaultMessage =
+        "Erro ao criar estatística da partida. Tente novamente.";
+
+      const errorMessage =
+        error instanceof Error
+          ? (domainErrorMessages[error.message as DomainErrorName] ??
+            defaultMessage)
+          : defaultMessage;
+
+      toast({
+        title: "Erro",
+        description: errorMessage,
+        variant: "destructive",
       });
     } finally {
       setLoading(false);
@@ -102,60 +195,110 @@ export default function LiveMatch() {
 
   const renderActiveCategoryStatButton = () => {
     switch (activeCategory) {
-      case 'goal':
+      case "goal":
         return (
           <div className="space-y-2">
-            <AddGoalsInsideBox currentMatch={currentMatch} recordMatchEvents={handleRecordMatchEvents} />
-            <AddGoalsOutsideBox currentMatch={currentMatch} recordMatchEvents={handleRecordMatchEvents} />
-            <OwnGoal currentMatch={currentMatch} recordMatchEvents={handleRecordMatchEvents} />
+            <AddGoalsInsideBox
+              currentMatch={currentMatch}
+              recordMatchEvents={handleRecordMatchEvents}
+            />
+            <AddGoalsOutsideBox
+              currentMatch={currentMatch}
+              recordMatchEvents={handleRecordMatchEvents}
+            />
+            <OwnGoal
+              currentMatch={currentMatch}
+              recordMatchEvents={handleRecordMatchEvents}
+            />
           </div>
         );
 
-      case 'pass':
+      case "pass":
         return (
           <div className="space-y-2">
-            <BigChanceCreated currentMatch={currentMatch} recordMatchEvents={handleRecordMatchEvents} />
-            <PassCompleted currentMatch={currentMatch} recordMatchEvents={handleRecordMatchEvents} />
-            <PassFailed currentMatch={currentMatch} recordMatchEvents={handleRecordMatchEvents} />
+            <BigChanceCreated
+              currentMatch={currentMatch}
+              recordMatchEvents={handleRecordMatchEvents}
+            />
+            <PassCompleted
+              currentMatch={currentMatch}
+              recordMatchEvents={handleRecordMatchEvents}
+            />
+            <PassFailed
+              currentMatch={currentMatch}
+              recordMatchEvents={handleRecordMatchEvents}
+            />
           </div>
         );
 
-      case 'shot':
+      case "shot":
         return (
           <div className="space-y-2">
-            <ShotOnTarget currentMatch={currentMatch} recordMatchEvents={handleRecordMatchEvents} />
-            <ShotOffTarget currentMatch={currentMatch} recordMatchEvents={handleRecordMatchEvents} />
-            <ShotHitPost currentMatch={currentMatch} recordMatchEvents={handleRecordMatchEvents} />
-            <BigChanceMissed currentMatch={currentMatch} recordMatchEvents={handleRecordMatchEvents} />
+            <ShotOnTarget
+              currentMatch={currentMatch}
+              recordMatchEvents={handleRecordMatchEvents}
+            />
+            <ShotOffTarget
+              currentMatch={currentMatch}
+              recordMatchEvents={handleRecordMatchEvents}
+            />
+            <ShotHitPost
+              currentMatch={currentMatch}
+              recordMatchEvents={handleRecordMatchEvents}
+            />
+            <BigChanceMissed
+              currentMatch={currentMatch}
+              recordMatchEvents={handleRecordMatchEvents}
+            />
           </div>
         );
 
-      case 'defense':
+      case "defense":
         return (
           <div className="space-y-2">
-            <Tackle currentMatch={currentMatch} recordMatchEvents={handleRecordMatchEvents} />
-            <DuelWon currentMatch={currentMatch} recordMatchEvents={handleRecordMatchEvents} />
-            <FoulCommited currentMatch={currentMatch} recordMatchEvents={handleRecordMatchEvents} />
+            <Tackle
+              currentMatch={currentMatch}
+              recordMatchEvents={handleRecordMatchEvents}
+            />
+            <DuelWon
+              currentMatch={currentMatch}
+              recordMatchEvents={handleRecordMatchEvents}
+            />
+            <FoulCommited
+              currentMatch={currentMatch}
+              recordMatchEvents={handleRecordMatchEvents}
+            />
           </div>
         );
 
-
-      case 'dribble':
+      case "dribble":
         return (
           <div className="space-y-2">
-            <DribbleSuccess currentMatch={currentMatch} recordMatchEvents={handleRecordMatchEvents} />
-            <DribbleFailed currentMatch={currentMatch} recordMatchEvents={handleRecordMatchEvents} />
+            <DribbleSuccess
+              currentMatch={currentMatch}
+              recordMatchEvents={handleRecordMatchEvents}
+            />
+            <DribbleFailed
+              currentMatch={currentMatch}
+              recordMatchEvents={handleRecordMatchEvents}
+            />
           </div>
         );
 
       default:
         return null;
     }
-  }
+  };
 
   useEffect(() => {
     handleGetMatch();
   }, []);
+
+  useEffect(() => {
+    if (currentMatch?.groupId) {
+      handleGetGroupDetails();
+    }
+  }, [currentMatch?.groupId]);
 
   return (
     <div className="min-h-screen bg-background flex flex-col">
@@ -177,7 +320,9 @@ export default function LiveMatch() {
           {loading ? (
             <div className="h-7 w-40 bg-muted animate-pulse rounded" />
           ) : (
-            <h1 className="text-2xl font-bold text-foreground">Partida ao Vivo</h1>
+            <h1 className="text-2xl font-bold text-foreground">
+              Partida ao Vivo
+            </h1>
           )}
         </motion.div>
       </header>
@@ -193,7 +338,10 @@ export default function LiveMatch() {
               </div>
               <div className="space-y-3">
                 {[1, 2, 3].map((i) => (
-                  <div key={i} className="h-14 bg-muted animate-pulse rounded-lg" />
+                  <div
+                    key={i}
+                    className="h-14 bg-muted animate-pulse rounded-lg"
+                  />
                 ))}
               </div>
             </>
@@ -207,19 +355,25 @@ export default function LiveMatch() {
                 <div className="flex items-center justify-center gap-4">
                   <div className="flex-1 text-center">
                     <span className="text-2xl">🟢</span>
-                    <p className="text-sm font-semibold text-foreground mt-1">Time A</p>
+                    <p className="text-sm font-semibold text-foreground mt-1">
+                      Time A
+                    </p>
                     <p className="text-4xl font-bold text-foreground mt-2">
-                      {countGoalsFromTeam('teamA', currentMatch)}
+                      {countGoalsFromTeam("teamA", currentMatch)}
                     </p>
                   </div>
 
-                  <div className="text-2xl font-bold text-muted-foreground">×</div>
+                  <div className="text-2xl font-bold text-muted-foreground">
+                    ×
+                  </div>
 
                   <div className="flex-1 text-center">
                     <span className="text-2xl">🔵</span>
-                    <p className="text-sm font-semibold text-foreground mt-1">Time B</p>
+                    <p className="text-sm font-semibold text-foreground mt-1">
+                      Time B
+                    </p>
                     <p className="text-4xl font-bold text-foreground mt-2">
-                      {countGoalsFromTeam('teamB', currentMatch)}
+                      {countGoalsFromTeam("teamB", currentMatch)}
                     </p>
                   </div>
                 </div>
@@ -231,10 +385,10 @@ export default function LiveMatch() {
                     key={cat.id}
                     onClick={() => setActiveCategory(cat.id)}
                     className={cn(
-                      'px-3 py-1.5 rounded-full text-xs font-semibold border transition-all',
+                      "px-3 py-1.5 rounded-full text-xs font-semibold border transition-all",
                       activeCategory === cat.id
-                        ? 'bg-primary text-primary-foreground border-primary shadow-sm'
-                        : 'bg-muted text-muted-foreground border-border hover:bg-accent hover:text-accent-foreground'
+                        ? "bg-primary text-primary-foreground border-primary shadow-sm"
+                        : "bg-muted text-muted-foreground border-border hover:bg-accent hover:text-accent-foreground",
                     )}
                   >
                     {cat.label}
@@ -244,7 +398,7 @@ export default function LiveMatch() {
 
               {renderActiveCategoryStatButton()}
 
-              {(['teamA', 'teamB'] as const).map((team) => {
+              {(["teamA", "teamB"] as const).map((team) => {
                 const players = teamPlayers(team);
 
                 return (
@@ -267,6 +421,13 @@ export default function LiveMatch() {
                   </div>
                 );
               })}
+
+              <SubstitutionPanel
+                bench={bench}
+                teamA={teamPlayers("teamA")}
+                teamB={teamPlayers("teamB")}
+                onSubstitute={handleSubstitution}
+              />
             </motion.div>
           )}
         </div>
