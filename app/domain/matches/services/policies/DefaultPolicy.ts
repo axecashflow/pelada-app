@@ -49,7 +49,7 @@ export class DefaultPolicy {
       [StatTypeEnum.BALL_RECOVERY]: 0.3,
 
       // 🧤 Goalkeeper
-      [StatTypeEnum.SAVE]: 0.4,
+      [StatTypeEnum.SAVE]: 1,
       [StatTypeEnum.SAVE_INSIDE_BOX]: 0.6,
       [StatTypeEnum.SAVE_OUTSIDE_BOX]: 0.3,
       [StatTypeEnum.PENALTY_SAVE]: 1.2,
@@ -70,6 +70,7 @@ export class DefaultPolicy {
       [StatTypeEnum.PENALTY_WON]: 0.7,
       [StatTypeEnum.PENALTY_MISSED]: 1.0,
       [StatTypeEnum.PENALTY_SCORED]: 1.2,
+      [StatTypeEnum.FREE_KICK_SCORED]: 1.4,
       [StatTypeEnum.PENALTY_CONCEDED]: 0.8,
       [StatTypeEnum.OWN_GOAL]: 1.0,
     };

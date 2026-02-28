@@ -1,4 +1,4 @@
-'use client';
+"use client";
 
 import { SubmitEventHandler, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
@@ -12,12 +12,15 @@ import { StatTypeEnum } from "@/app/domain/matches/enum/Stats";
 import { RecordEventInputType, TeamId } from "../../types";
 import { getTeamPlayers } from "../../utils";
 
-type FoulCommitedProps = {
+type SaveOutsideBoxProps = {
   currentMatch: MatchViewModelType | null;
   recordMatchEvents: (events: RecordEventInputType[]) => Promise<void>;
-}
+};
 
-const FoulCommited = ({ currentMatch, recordMatchEvents }: FoulCommitedProps) => {
+const SaveOutsideBox = ({
+  currentMatch,
+  recordMatchEvents,
+}: SaveOutsideBoxProps) => {
   const { toast } = useToast();
 
   const [showEventModal, setShowEventModal] = useState<TeamId | null>(null);
@@ -25,45 +28,45 @@ const FoulCommited = ({ currentMatch, recordMatchEvents }: FoulCommitedProps) =>
   const teamPlayers = (team: TeamId) => getTeamPlayers(team, currentMatch);
 
   const opponentPlayers = (team: TeamId) => {
-    const opponentTeam = team === 'teamA' ? 'teamB' : 'teamA';
+    const opponentTeam = team === "teamA" ? "teamB" : "teamA";
     return getTeamPlayers(opponentTeam, currentMatch);
   };
 
-  const teamLabel = (team: TeamId) => (team === 'teamA' ? 'Time A' : 'Time B');
+  const teamLabel = (team: TeamId) => (team === "teamA" ? "Time A" : "Time B");
 
   const teamIcon = (teamId: TeamId) => {
-    if (teamId === 'teamA') {
-      return '🟢';
+    if (teamId === "teamA") {
+      return "🟢";
     }
 
-    if (teamId === 'teamB') {
-      return '🔵';
+    if (teamId === "teamB") {
+      return "🔵";
     }
 
-    return '';
+    return "";
   };
 
   const handleAddEvent: SubmitEventHandler<HTMLFormElement> = async (event) => {
     event.preventDefault();
 
     const formData = new FormData(event.currentTarget);
-    const scorerId = formData.get('scorerId') as string;
-    const opponentId = formData.get('opponentId') as string;
+    const scorerId = formData.get("scorerId") as string;
+    const opponentId = formData.get("opponentId") as string;
 
     if (!scorerId) {
       toast({
-        title: 'Erro',
-        description: 'Selecione o autor da falta.',
-        variant: 'destructive',
+        title: "Erro",
+        description: "Selecione o autor da defesa.",
+        variant: "destructive",
       });
       return;
     }
 
     if (!opponentId) {
       toast({
-        title: 'Erro',
-        description: 'Selecione quem sofreu a falta.',
-        variant: 'destructive',
+        title: "Erro",
+        description: "Selecione quem finalizou no gol.",
+        variant: "destructive",
       });
       return;
     }
@@ -73,7 +76,7 @@ const FoulCommited = ({ currentMatch, recordMatchEvents }: FoulCommitedProps) =>
     eventsToRecord.push({
       matchId: currentMatch!.id,
       playerId: scorerId,
-      statType: StatTypeEnum.FOUL_COMMITTED,
+      statType: StatTypeEnum.SAVE_OUTSIDE_BOX,
       opponentPlayerId: opponentId,
     });
 
@@ -86,23 +89,23 @@ const FoulCommited = ({ currentMatch, recordMatchEvents }: FoulCommitedProps) =>
     <>
       <div className="grid grid-cols-2 gap-3">
         <SportButton
-          onClick={() => setShowEventModal('teamA')}
+          onClick={() => setShowEventModal("teamA")}
           variant="secondary"
           size="sm"
           className="w-full"
         >
           <Plus className="w-4 h-4 mr-1" />
-          Falta cometida
+          Finalização de longe
         </SportButton>
 
         <SportButton
-          onClick={() => setShowEventModal('teamB')}
+          onClick={() => setShowEventModal("teamB")}
           variant="secondary"
           size="sm"
           className="w-full"
         >
           <Plus className="w-4 h-4 mr-1" />
-          Falta cometida
+          Finalização de longe
         </SportButton>
       </div>
 
@@ -124,7 +127,8 @@ const FoulCommited = ({ currentMatch, recordMatchEvents }: FoulCommitedProps) =>
             >
               <div className="flex items-center justify-between mb-5">
                 <h3 className="text-lg font-bold text-foreground">
-                  {teamIcon(showEventModal)} Falta do {teamLabel(showEventModal)}
+                  {teamIcon(showEventModal)} Defesa do{" "}
+                  {teamLabel(showEventModal)}
                 </h3>
                 <button
                   onClick={() => setShowEventModal(null)}
@@ -137,8 +141,11 @@ const FoulCommited = ({ currentMatch, recordMatchEvents }: FoulCommitedProps) =>
               <form onSubmit={handleAddEvent} className="space-y-5">
                 {/* Scorer (required) */}
                 <div className="space-y-2">
-                  <label htmlFor="scorerId" className="block text-sm font-medium text-foreground">
-                    Autor da falta <span className="text-destructive">*</span>
+                  <label
+                    htmlFor="scorerId"
+                    className="block text-sm font-medium text-foreground"
+                  >
+                    Autor da defesa <span className="text-destructive">*</span>
                   </label>
                   <select
                     id="scorerId"
@@ -156,8 +163,11 @@ const FoulCommited = ({ currentMatch, recordMatchEvents }: FoulCommitedProps) =>
                 </div>
 
                 <div className="space-y-2">
-                  <label htmlFor="opponentId" className="block text-sm font-medium text-foreground">
-                    Quem sofreu a falta? <span className="text-destructive">*</span>
+                  <label
+                    htmlFor="opponentId"
+                    className="block text-sm font-medium text-foreground"
+                  >
+                    Quem finalizou ? <span className="text-destructive">*</span>
                   </label>
                   <select
                     id="opponentId"
@@ -174,12 +184,9 @@ const FoulCommited = ({ currentMatch, recordMatchEvents }: FoulCommitedProps) =>
                   </select>
                 </div>
 
-                <SportButton
-                  type="submit"
-                  className="w-full"
-                >
+                <SportButton type="submit" className="w-full">
                   <Target className="w-5 h-5 mr-2" />
-                  Registrar falta
+                  Registrar defesa
                 </SportButton>
               </form>
             </motion.div>
@@ -187,7 +194,7 @@ const FoulCommited = ({ currentMatch, recordMatchEvents }: FoulCommitedProps) =>
         )}
       </AnimatePresence>
     </>
-  )
+  );
 };
 
-export default FoulCommited;
+export default SaveOutsideBox;

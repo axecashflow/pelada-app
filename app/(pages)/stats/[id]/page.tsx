@@ -84,8 +84,8 @@ export default function DaySummary() {
         value: topDefender.tackles,
         suffix:
           topDefender.tackles === 1
-            ? "desarme/recuperação"
-            : "desarmes/recuperações",
+            ? "desarme/recuperação/corte"
+            : "desarmes/recuperações/cortes",
       });
     }
 
@@ -106,8 +106,8 @@ export default function DaySummary() {
         icon: <Zap className="w-5 h-5 text-purple-500" />,
         label: "Melhor Driblador",
         playerName: topDribbler.playerName,
-        value: topDribbler.dribbles,
-        suffix: topDribbler.dribbles === 1 ? "drible" : "dribles",
+        value: topDribbler.dribblesAttempted,
+        suffix: `${topDribbler.dribbleSuccessRate}%`,
       });
     }
 

@@ -18,6 +18,7 @@ export enum StatCategory {
   PASSES = 'passes',
   DEFENSIVE = 'defensive',
   GOALKEEPER = 'goalkeeper',
+  FREE_KICK = 'free_kick',
 }
 
 type StatCategoryConfig = {
@@ -56,6 +57,11 @@ export const STAT_CATEGORY_CONFIG: Record<StatCategory, StatCategoryConfig> = {
     icon: <Hand className="w-4 h-4" />,
     label: 'Goleiro',
     color: 'text-purple-500',
+  },
+  [StatCategory.FREE_KICK]: {
+    icon: <Zap className="w-4 h-4" />,
+    label: 'Bola parada',
+    color: 'text-orange-500',
   },
 };
 
@@ -108,19 +114,22 @@ export function getStatCategory(statType: StatTypeEnum): StatCategory {
     [StatTypeEnum.SAVE_OUTSIDE_BOX]: StatCategory.GOALKEEPER,
     [StatTypeEnum.PENALTY_SAVE]: StatCategory.GOALKEEPER,
     [StatTypeEnum.GOAL_CONCEDED]: StatCategory.GOALKEEPER,
-    [StatTypeEnum.PENALTY_CONCEDED]: StatCategory.GOALKEEPER,
 
+    // Free Kick
+    [StatTypeEnum.PENALTY_CONCEDED]: StatCategory.FREE_KICK,
+    [StatTypeEnum.FOUL_COMMITTED]: StatCategory.FREE_KICK,
+    [StatTypeEnum.FOUL_SUFFERED]: StatCategory.FREE_KICK,
+    [StatTypeEnum.PENALTY_WON]: StatCategory.FREE_KICK,
+    [StatTypeEnum.PENALTY_MISSED]: StatCategory.FREE_KICK,
+    [StatTypeEnum.PENALTY_SCORED]: StatCategory.FREE_KICK,
+    [StatTypeEnum.FREE_KICK_SCORED]: StatCategory.FREE_KICK,
+    
     // Other
     [StatTypeEnum.ERROR_LEADING_TO_GOAL]: StatCategory.DEFENSIVE,
     [StatTypeEnum.ERROR_LEADING_TO_SHOT]: StatCategory.DEFENSIVE,
-    [StatTypeEnum.FOUL_COMMITTED]: StatCategory.DEFENSIVE,
-    [StatTypeEnum.FOUL_SUFFERED]: StatCategory.DEFENSIVE,
     [StatTypeEnum.YELLOW_CARD]: StatCategory.DEFENSIVE,
     [StatTypeEnum.SECOND_YELLOW_CARD]: StatCategory.DEFENSIVE,
     [StatTypeEnum.RED_CARD]: StatCategory.DEFENSIVE,
-    [StatTypeEnum.PENALTY_WON]: StatCategory.ASSISTS,
-    [StatTypeEnum.PENALTY_MISSED]: StatCategory.GOALS,
-    [StatTypeEnum.PENALTY_SCORED]: StatCategory.GOALS,
   };
 
   return categoryMap[statType] || StatCategory.DEFENSIVE;
@@ -132,17 +141,17 @@ export function getStatLabel(statType: StatTypeEnum): string {
     [StatTypeEnum.GOAL_FROM_INSIDE_BOX]: 'Gol (dentro da área)',
     [StatTypeEnum.GOAL_FROM_OUTSIDE_BOX]: 'Gol (fora da área)',
     [StatTypeEnum.OWN_GOAL]: 'Gol contra',
-    [StatTypeEnum.SHOT_ON_TARGET]: 'Chute no gol',
-    [StatTypeEnum.SHOT_OFF_TARGET]: 'Chute pra fora',
-    [StatTypeEnum.SHOT_BLOCKED]: 'Chute bloqueado',
-    [StatTypeEnum.SHOT_HIT_POST]: 'Chute na trave',
+    [StatTypeEnum.SHOT_ON_TARGET]: 'Finalização no gol',
+    [StatTypeEnum.SHOT_OFF_TARGET]: 'Finalização pra fora',
+    [StatTypeEnum.SHOT_BLOCKED]: 'Finalização bloqueado',
+    [StatTypeEnum.SHOT_HIT_POST]: 'Finalização na trave',
     [StatTypeEnum.BIG_CHANCE_MISSED]: 'Grande chance perdida',
 
     // Assists
     [StatTypeEnum.ASSIST]: 'Assistência',
     [StatTypeEnum.PRE_ASSIST]: 'Pré-assistência',
     [StatTypeEnum.BIG_CHANCE_CREATED]: 'Grande chance criada',
-    [StatTypeEnum.KEY_PASS]: 'Passe decisivo',
+    [StatTypeEnum.KEY_PASS]: 'Passe-chave',
 
     // Dribbles
     [StatTypeEnum.DRIBBLE_SUCCESS]: 'Drible certo',
@@ -170,24 +179,25 @@ export function getStatLabel(statType: StatTypeEnum): string {
     [StatTypeEnum.BALL_RECOVERY]: 'Bola recuperada',
 
     // Goalkeeper
-    [StatTypeEnum.SAVE]: 'Defesa',
+    [StatTypeEnum.SAVE]: 'Defesa difícil',
     [StatTypeEnum.SAVE_INSIDE_BOX]: 'Defesa (dentro da área)',
     [StatTypeEnum.SAVE_OUTSIDE_BOX]: 'Defesa (fora da área)',
     [StatTypeEnum.PENALTY_SAVE]: 'Pênalti defendido',
-    [StatTypeEnum.GOAL_CONCEDED]: 'Gol sofrido',
-    [StatTypeEnum.PENALTY_CONCEDED]: 'Pênalti sofrido',
+    [StatTypeEnum.GOAL_CONCEDED]: 'Frango',
+    [StatTypeEnum.PENALTY_CONCEDED]: 'Falta dentro da área',
 
     // Other
     [StatTypeEnum.ERROR_LEADING_TO_GOAL]: 'Erro que resultou em gol',
-    [StatTypeEnum.ERROR_LEADING_TO_SHOT]: 'Erro que resultou em chute',
+    [StatTypeEnum.ERROR_LEADING_TO_SHOT]: 'Erro que resultou em finalização',
     [StatTypeEnum.FOUL_COMMITTED]: 'Falta cometida',
     [StatTypeEnum.FOUL_SUFFERED]: 'Falta sofrida',
     [StatTypeEnum.YELLOW_CARD]: 'Cartão amarelo',
     [StatTypeEnum.SECOND_YELLOW_CARD]: 'Segundo amarelo',
     [StatTypeEnum.RED_CARD]: 'Cartão vermelho',
-    [StatTypeEnum.PENALTY_WON]: 'Pênalti conquistado',
+    [StatTypeEnum.PENALTY_WON]: 'Pênalti sofrido',
     [StatTypeEnum.PENALTY_MISSED]: 'Pênalti perdido',
     [StatTypeEnum.PENALTY_SCORED]: 'Pênalti convertido',
+    [StatTypeEnum.FREE_KICK_SCORED]: 'Falta convertida',
   };
 
   return labelMap[statType] || statType;

@@ -18,6 +18,8 @@ export const countGoalsFromTeam = (
   const goalTypes = [
     StatTypeEnum.GOAL_FROM_INSIDE_BOX,
     StatTypeEnum.GOAL_FROM_OUTSIDE_BOX,
+    StatTypeEnum.FREE_KICK_SCORED,
+    StatTypeEnum.PENALTY_SCORED,
   ];
 
   const playersFromTeam = currentMatch[team].players;
@@ -63,9 +65,10 @@ export const statCategories = [
   { id: "goal", label: "⚽ Gol" },
   { id: "shot", label: "🥅 Finalização" },
   { id: "pass", label: "🎯 Passe" },
-  { id: "dribble", label: "🏃 Drible" },
+  { id: "dribble", label: "🪄 Drible" },
   { id: "defense", label: "🛡️ Defesa" },
-  // { id: 'goalkeeper', label: '🧤 Goleiro' },
+  { id: "goalkeeper", label: "🧤 Goleiro" },
+  { id: "free_kick", label: "📣 Bola parada" },
 ] as const;
 
 export type StatCategoryTagType = (typeof statCategories)[number]["id"];

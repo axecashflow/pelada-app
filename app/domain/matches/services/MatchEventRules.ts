@@ -136,12 +136,15 @@ export class MatchEventRules {
     // 🧤 Goalkeeper
     [StatTypeEnum.SAVE]: {
       primary: { type: StatTypeEnum.SAVE, impact: ImpactEnum.POSITIVE },
+      counterpart: {type: StatTypeEnum.SHOT_ON_TARGET, impact: ImpactEnum.POSITIVE },
     },
     [StatTypeEnum.SAVE_INSIDE_BOX]: {
       primary: { type: StatTypeEnum.SAVE_INSIDE_BOX, impact: ImpactEnum.POSITIVE },
+      counterpart: {type: StatTypeEnum.SHOT_ON_TARGET, impact: ImpactEnum.POSITIVE },
     },
     [StatTypeEnum.SAVE_OUTSIDE_BOX]: {
       primary: { type: StatTypeEnum.SAVE_OUTSIDE_BOX, impact: ImpactEnum.POSITIVE },
+      counterpart: {type: StatTypeEnum.SHOT_ON_TARGET, impact: ImpactEnum.POSITIVE },
     },
     [StatTypeEnum.PENALTY_SAVE]: {
       primary: { type: StatTypeEnum.PENALTY_SAVE, impact: ImpactEnum.POSITIVE },
@@ -188,7 +191,9 @@ export class MatchEventRules {
     },
     [StatTypeEnum.PENALTY_SCORED]: {
       primary: { type: StatTypeEnum.PENALTY_SCORED, impact: ImpactEnum.POSITIVE },
-      counterpart: { type: StatTypeEnum.GOAL_CONCEDED, impact: ImpactEnum.NEGATIVE },
+    },
+    [StatTypeEnum.FREE_KICK_SCORED]: {
+      primary: { type: StatTypeEnum.FREE_KICK_SCORED, impact: ImpactEnum.POSITIVE },
     },
     [StatTypeEnum.PENALTY_CONCEDED]: {
       primary: { type: StatTypeEnum.PENALTY_CONCEDED, impact: ImpactEnum.NEGATIVE },

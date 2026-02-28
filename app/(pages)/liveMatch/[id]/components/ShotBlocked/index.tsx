@@ -12,12 +12,12 @@ import { StatTypeEnum } from "@/app/domain/matches/enum/Stats";
 import { RecordEventInputType, TeamId } from "../../types";
 import { getTeamPlayers } from "../../utils";
 
-type FoulCommitedProps = {
+type ShotBlockedProps = {
   currentMatch: MatchViewModelType | null;
   recordMatchEvents: (events: RecordEventInputType[]) => Promise<void>;
 }
 
-const FoulCommited = ({ currentMatch, recordMatchEvents }: FoulCommitedProps) => {
+const ShotBlocked = ({ currentMatch, recordMatchEvents }: ShotBlockedProps) => {
   const { toast } = useToast();
 
   const [showEventModal, setShowEventModal] = useState<TeamId | null>(null);
@@ -53,7 +53,7 @@ const FoulCommited = ({ currentMatch, recordMatchEvents }: FoulCommitedProps) =>
     if (!scorerId) {
       toast({
         title: 'Erro',
-        description: 'Selecione o autor da falta.',
+        description: 'Selecione o autor do chute.',
         variant: 'destructive',
       });
       return;
@@ -62,7 +62,7 @@ const FoulCommited = ({ currentMatch, recordMatchEvents }: FoulCommitedProps) =>
     if (!opponentId) {
       toast({
         title: 'Erro',
-        description: 'Selecione quem sofreu a falta.',
+        description: 'Selecione quem bloqueou o chute.',
         variant: 'destructive',
       });
       return;
@@ -73,7 +73,7 @@ const FoulCommited = ({ currentMatch, recordMatchEvents }: FoulCommitedProps) =>
     eventsToRecord.push({
       matchId: currentMatch!.id,
       playerId: scorerId,
-      statType: StatTypeEnum.FOUL_COMMITTED,
+      statType: StatTypeEnum.SHOT_BLOCKED,
       opponentPlayerId: opponentId,
     });
 
@@ -92,7 +92,7 @@ const FoulCommited = ({ currentMatch, recordMatchEvents }: FoulCommitedProps) =>
           className="w-full"
         >
           <Plus className="w-4 h-4 mr-1" />
-          Falta cometida
+            Finalização bloqueada
         </SportButton>
 
         <SportButton
@@ -102,7 +102,7 @@ const FoulCommited = ({ currentMatch, recordMatchEvents }: FoulCommitedProps) =>
           className="w-full"
         >
           <Plus className="w-4 h-4 mr-1" />
-          Falta cometida
+            Finalização bloqueada
         </SportButton>
       </div>
 
@@ -124,7 +124,7 @@ const FoulCommited = ({ currentMatch, recordMatchEvents }: FoulCommitedProps) =>
             >
               <div className="flex items-center justify-between mb-5">
                 <h3 className="text-lg font-bold text-foreground">
-                  {teamIcon(showEventModal)} Falta do {teamLabel(showEventModal)}
+                  {teamIcon(showEventModal)} finalização bloqueada do {teamLabel(showEventModal)}
                 </h3>
                 <button
                   onClick={() => setShowEventModal(null)}
@@ -138,7 +138,7 @@ const FoulCommited = ({ currentMatch, recordMatchEvents }: FoulCommitedProps) =>
                 {/* Scorer (required) */}
                 <div className="space-y-2">
                   <label htmlFor="scorerId" className="block text-sm font-medium text-foreground">
-                    Autor da falta <span className="text-destructive">*</span>
+                    Autor da finalização <span className="text-destructive">*</span>
                   </label>
                   <select
                     id="scorerId"
@@ -157,7 +157,7 @@ const FoulCommited = ({ currentMatch, recordMatchEvents }: FoulCommitedProps) =>
 
                 <div className="space-y-2">
                   <label htmlFor="opponentId" className="block text-sm font-medium text-foreground">
-                    Quem sofreu a falta? <span className="text-destructive">*</span>
+                    Quem bloqueou a finalização ? <span className="text-destructive">*</span>
                   </label>
                   <select
                     id="opponentId"
@@ -179,7 +179,7 @@ const FoulCommited = ({ currentMatch, recordMatchEvents }: FoulCommitedProps) =>
                   className="w-full"
                 >
                   <Target className="w-5 h-5 mr-2" />
-                  Registrar falta
+                  Registrar finalização bloqueada
                 </SportButton>
               </form>
             </motion.div>
@@ -190,4 +190,4 @@ const FoulCommited = ({ currentMatch, recordMatchEvents }: FoulCommitedProps) =>
   )
 };
 
-export default FoulCommited;
+export default ShotBlocked;

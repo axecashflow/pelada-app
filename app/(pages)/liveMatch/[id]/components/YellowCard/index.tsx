@@ -12,22 +12,17 @@ import { StatTypeEnum } from "@/app/domain/matches/enum/Stats";
 import { RecordEventInputType, TeamId } from "../../types";
 import { getTeamPlayers } from "../../utils";
 
-type FoulCommitedProps = {
+type YellowCardProps = {
   currentMatch: MatchViewModelType | null;
   recordMatchEvents: (events: RecordEventInputType[]) => Promise<void>;
 }
 
-const FoulCommited = ({ currentMatch, recordMatchEvents }: FoulCommitedProps) => {
+const YellowCard = ({ currentMatch, recordMatchEvents }: YellowCardProps) => {
   const { toast } = useToast();
 
   const [showEventModal, setShowEventModal] = useState<TeamId | null>(null);
 
   const teamPlayers = (team: TeamId) => getTeamPlayers(team, currentMatch);
-
-  const opponentPlayers = (team: TeamId) => {
-    const opponentTeam = team === 'teamA' ? 'teamB' : 'teamA';
-    return getTeamPlayers(opponentTeam, currentMatch);
-  };
 
   const teamLabel = (team: TeamId) => (team === 'teamA' ? 'Time A' : 'Time B');
 
@@ -48,21 +43,11 @@ const FoulCommited = ({ currentMatch, recordMatchEvents }: FoulCommitedProps) =>
 
     const formData = new FormData(event.currentTarget);
     const scorerId = formData.get('scorerId') as string;
-    const opponentId = formData.get('opponentId') as string;
 
     if (!scorerId) {
       toast({
         title: 'Erro',
-        description: 'Selecione o autor da falta.',
-        variant: 'destructive',
-      });
-      return;
-    }
-
-    if (!opponentId) {
-      toast({
-        title: 'Erro',
-        description: 'Selecione quem sofreu a falta.',
+        description: 'Selecione o jogador que tomou o cartão amarelo.',
         variant: 'destructive',
       });
       return;
@@ -73,8 +58,7 @@ const FoulCommited = ({ currentMatch, recordMatchEvents }: FoulCommitedProps) =>
     eventsToRecord.push({
       matchId: currentMatch!.id,
       playerId: scorerId,
-      statType: StatTypeEnum.FOUL_COMMITTED,
-      opponentPlayerId: opponentId,
+      statType: StatTypeEnum.YELLOW_CARD,
     });
 
     await recordMatchEvents(eventsToRecord);
@@ -92,7 +76,7 @@ const FoulCommited = ({ currentMatch, recordMatchEvents }: FoulCommitedProps) =>
           className="w-full"
         >
           <Plus className="w-4 h-4 mr-1" />
-          Falta cometida
+          Cartão amarelo
         </SportButton>
 
         <SportButton
@@ -102,7 +86,7 @@ const FoulCommited = ({ currentMatch, recordMatchEvents }: FoulCommitedProps) =>
           className="w-full"
         >
           <Plus className="w-4 h-4 mr-1" />
-          Falta cometida
+          Cartão amarelo
         </SportButton>
       </div>
 
@@ -124,7 +108,7 @@ const FoulCommited = ({ currentMatch, recordMatchEvents }: FoulCommitedProps) =>
             >
               <div className="flex items-center justify-between mb-5">
                 <h3 className="text-lg font-bold text-foreground">
-                  {teamIcon(showEventModal)} Falta do {teamLabel(showEventModal)}
+                  {teamIcon(showEventModal)} Cartão amarelo para {teamLabel(showEventModal)}
                 </h3>
                 <button
                   onClick={() => setShowEventModal(null)}
@@ -138,7 +122,7 @@ const FoulCommited = ({ currentMatch, recordMatchEvents }: FoulCommitedProps) =>
                 {/* Scorer (required) */}
                 <div className="space-y-2">
                   <label htmlFor="scorerId" className="block text-sm font-medium text-foreground">
-                    Autor da falta <span className="text-destructive">*</span>
+                    Jogador punido <span className="text-destructive">*</span>
                   </label>
                   <select
                     id="scorerId"
@@ -155,31 +139,12 @@ const FoulCommited = ({ currentMatch, recordMatchEvents }: FoulCommitedProps) =>
                   </select>
                 </div>
 
-                <div className="space-y-2">
-                  <label htmlFor="opponentId" className="block text-sm font-medium text-foreground">
-                    Quem sofreu a falta? <span className="text-destructive">*</span>
-                  </label>
-                  <select
-                    id="opponentId"
-                    name="opponentId"
-                    required
-                    className="w-full px-4 py-3 bg-input border border-border rounded-lg text-foreground focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
-                  >
-                    <option value="">Selecione...</option>
-                    {opponentPlayers(showEventModal).map((p) => (
-                      <option key={p.id} value={p.id}>
-                        {p.name}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-
                 <SportButton
                   type="submit"
                   className="w-full"
                 >
                   <Target className="w-5 h-5 mr-2" />
-                  Registrar falta
+                  Registrar cartão amarelo
                 </SportButton>
               </form>
             </motion.div>
@@ -190,4 +155,4 @@ const FoulCommited = ({ currentMatch, recordMatchEvents }: FoulCommitedProps) =>
   )
 };
 
-export default FoulCommited;
+export default YellowCard;

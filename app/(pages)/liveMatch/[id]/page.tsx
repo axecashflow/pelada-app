@@ -56,6 +56,18 @@ import PassFailed from "./components/PassFailed";
 import DuelWon from "./components/DuelWon";
 import OwnGoal from "./components/OwnGoal";
 import SubstitutionPanel from "./components/SubstitutionPanel";
+import ShotBlocked from "./components/ShotBlocked";
+import SaveInsideBox from "./components/SaveInsideBox";
+import SaveOutsideBox from "./components/SaveOutsideBox";
+import GoalConceded from "./components/GoalConceded";
+import Save from "./components/Save";
+import PenaltyCommited from "./components/PenaltyCommited";
+import PenaltyScored from "./components/PenaltyScored";
+import FreeKickScored from "./components/FreeKickScored";
+import YellowCard from "./components/YellowCard";
+import SecondYellowCard from "./components/SecondYellowCard";
+import RedCard from "./components/RedCard";
+import Clearance from "./components/Clearance";
 
 export default function LiveMatch() {
   const router = useRouter();
@@ -250,6 +262,10 @@ export default function LiveMatch() {
               currentMatch={currentMatch}
               recordMatchEvents={handleRecordMatchEvents}
             />
+            <ShotBlocked
+              currentMatch={currentMatch}
+              recordMatchEvents={handleRecordMatchEvents}
+            />
           </div>
         );
 
@@ -260,11 +276,11 @@ export default function LiveMatch() {
               currentMatch={currentMatch}
               recordMatchEvents={handleRecordMatchEvents}
             />
-            <DuelWon
+            <Clearance
               currentMatch={currentMatch}
               recordMatchEvents={handleRecordMatchEvents}
             />
-            <FoulCommited
+            <DuelWon
               currentMatch={currentMatch}
               recordMatchEvents={handleRecordMatchEvents}
             />
@@ -279,6 +295,58 @@ export default function LiveMatch() {
               recordMatchEvents={handleRecordMatchEvents}
             />
             <DribbleFailed
+              currentMatch={currentMatch}
+              recordMatchEvents={handleRecordMatchEvents}
+            />
+          </div>
+        );
+
+      case "goalkeeper":
+        return (
+          <div className="space-y-2">
+            <Save
+              currentMatch={currentMatch}
+              recordMatchEvents={handleRecordMatchEvents}
+            />
+            <SaveInsideBox
+              currentMatch={currentMatch}
+              recordMatchEvents={handleRecordMatchEvents}
+            />
+            <SaveOutsideBox
+              currentMatch={currentMatch}
+              recordMatchEvents={handleRecordMatchEvents}
+            />
+            <GoalConceded
+              currentMatch={currentMatch}
+              recordMatchEvents={handleRecordMatchEvents}
+            />
+          </div>
+        );
+
+      case "free_kick":
+        return (
+          <div className="space-y-2">
+            <FoulCommited
+              currentMatch={currentMatch}
+              recordMatchEvents={handleRecordMatchEvents}
+            />
+            <PenaltyCommited
+              currentMatch={currentMatch}
+              recordMatchEvents={handleRecordMatchEvents}
+            />
+            <PenaltyScored
+              currentMatch={currentMatch}
+              recordMatchEvents={handleRecordMatchEvents}
+            />
+            <FreeKickScored
+              currentMatch={currentMatch}
+              recordMatchEvents={handleRecordMatchEvents}
+            />
+            <YellowCard
+              currentMatch={currentMatch}
+              recordMatchEvents={handleRecordMatchEvents}
+            />
+            <RedCard
               currentMatch={currentMatch}
               recordMatchEvents={handleRecordMatchEvents}
             />
