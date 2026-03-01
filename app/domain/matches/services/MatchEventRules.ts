@@ -202,6 +202,24 @@ export class MatchEventRules {
     [StatTypeEnum.OWN_GOAL]: {
       primary: { type: StatTypeEnum.OWN_GOAL, impact: ImpactEnum.NEGATIVE },
     },
+    // Skill moves
+    [StatTypeEnum.NUTMEG]: {
+      primary: { type: StatTypeEnum.NUTMEG, impact: ImpactEnum.POSITIVE },
+      counterpart: { type: StatTypeEnum.NUTMEG_RECEIVED, impact: ImpactEnum.NEGATIVE },
+    },
+    [StatTypeEnum.NUTMEG_RECEIVED]: {
+      primary: { type: StatTypeEnum.NUTMEG_RECEIVED, impact: ImpactEnum.NEGATIVE },
+      counterpart: { type: StatTypeEnum.NUTMEG, impact: ImpactEnum.POSITIVE },
+    },
+
+    [StatTypeEnum.LOB]: {
+      primary: { type: StatTypeEnum.LOB, impact: ImpactEnum.POSITIVE },
+      counterpart: { type: StatTypeEnum.LOB_RECEIVED, impact: ImpactEnum.NEGATIVE },
+    },
+    [StatTypeEnum.LOB_RECEIVED]: {
+      primary: { type: StatTypeEnum.LOB_RECEIVED, impact: ImpactEnum.NEGATIVE },
+      counterpart: { type: StatTypeEnum.LOB, impact: ImpactEnum.POSITIVE },
+    },
   };
 
   static getEventRule(statType: StatTypeEnum): StatEventRule {

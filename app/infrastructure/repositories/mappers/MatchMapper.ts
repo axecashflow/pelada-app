@@ -97,7 +97,7 @@ export class MatchMapper {
     ];
 
     const stats: MatchStatPersistence[] = match.stats.map((stat, index) => ({
-      id: `${match.id.value}-stat-${index}`,
+      id: crypto.randomUUID(),
       matchId: match.id.value,
       playerId: stat.playerId.value,
       type: stat.type,

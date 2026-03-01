@@ -5,6 +5,7 @@ import { GameModeMapper } from "./GameModeMapper";
 import { GroupPersistence } from "../types/GroupPersistence";
 import { GroupId } from "@/app/domain/group/value-objects/GroupId";
 import { MemberStatusEnum } from "@/app/domain/group/enum/Member";
+import { m } from "framer-motion";
 
 export class GroupMapper {
   static toPersistence(group: Group) {
@@ -14,7 +15,12 @@ export class GroupMapper {
       gameMode: GameModeMapper.toPersistence(group.gameMode),
       status: group.status,
       ownerId: group.ownerId,
-      createdAt: group['props'].createdAt,
+      createdAt: group.createdAt,
+      members: group.members.map(m => ({
+        id: m.id.value,
+        name: m.name,
+        status: m.status
+      }))
     };
   }
 

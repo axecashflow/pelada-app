@@ -130,6 +130,11 @@ export function getStatCategory(statType: StatTypeEnum): StatCategory {
     [StatTypeEnum.YELLOW_CARD]: StatCategory.DEFENSIVE,
     [StatTypeEnum.SECOND_YELLOW_CARD]: StatCategory.DEFENSIVE,
     [StatTypeEnum.RED_CARD]: StatCategory.DEFENSIVE,
+
+    [StatTypeEnum.NUTMEG]: StatCategory.DRIBBLES,
+    [StatTypeEnum.NUTMEG_RECEIVED]: StatCategory.DRIBBLES,
+    [StatTypeEnum.LOB]: StatCategory.DRIBBLES,
+    [StatTypeEnum.LOB_RECEIVED]: StatCategory.DRIBBLES,
   };
 
   return categoryMap[statType] || StatCategory.DEFENSIVE;
@@ -156,6 +161,10 @@ export function getStatLabel(statType: StatTypeEnum): string {
     // Dribbles
     [StatTypeEnum.DRIBBLE_SUCCESS]: 'Drible certo',
     [StatTypeEnum.DRIBBLE_FAILED]: 'Drible errado',
+    [StatTypeEnum.NUTMEG]: 'Caneta',
+    [StatTypeEnum.NUTMEG_RECEIVED]: 'Tomou caneta',
+    [StatTypeEnum.LOB]: 'Chapéu',
+    [StatTypeEnum.LOB_RECEIVED]: 'Tomou chapéu',
 
     // Passes
     [StatTypeEnum.PASS_COMPLETED]: 'Passe certo',

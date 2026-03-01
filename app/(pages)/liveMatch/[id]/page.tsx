@@ -46,6 +46,8 @@ import ShotHitPost from "./components/ShotHitPost";
 import Tackle from "./components/Tackle";
 import DribbleFailed from "./components/DribbleFailed";
 import DribbleSuccess from "./components/DribbleSuccess";
+import Nutmeg from "./components/Nutmeg";
+import Lob from "./components/Lob";
 import BigChanceMissed from "./components/BigChanceMissed";
 import FoulCommited from "./components/FoulCommited";
 import ShotOnTarget from "./components/ShotOnTarget";
@@ -291,6 +293,14 @@ export default function LiveMatch() {
         return (
           <div className="space-y-2">
             <DribbleSuccess
+              currentMatch={currentMatch}
+              recordMatchEvents={handleRecordMatchEvents}
+            />
+            <Nutmeg
+              currentMatch={currentMatch}
+              recordMatchEvents={handleRecordMatchEvents}
+            />
+            <Lob
               currentMatch={currentMatch}
               recordMatchEvents={handleRecordMatchEvents}
             />

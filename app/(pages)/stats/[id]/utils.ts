@@ -154,6 +154,8 @@ export function calculatePlayerStats(
               break;
 
             case StatTypeEnum.DRIBBLE_SUCCESS:
+            case StatTypeEnum.NUTMEG:
+            case StatTypeEnum.LOB:
               stats.dribblesSuccessful += 1;
               stats.dribblesAttempted += 1;
               break;

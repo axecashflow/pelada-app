@@ -73,6 +73,11 @@ export class DefaultPolicy {
       [StatTypeEnum.FREE_KICK_SCORED]: 1.4,
       [StatTypeEnum.PENALTY_CONCEDED]: 0.8,
       [StatTypeEnum.OWN_GOAL]: 1.0,
+      // Skill / flair: nutmeg and lob
+      [StatTypeEnum.NUTMEG]: 0.6,
+      [StatTypeEnum.NUTMEG_RECEIVED]: 0.25,
+      [StatTypeEnum.LOB]: 0.8,
+      [StatTypeEnum.LOB_RECEIVED]: 0.4,
     };
 
     return weights[stat] ?? 0;

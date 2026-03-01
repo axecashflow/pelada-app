@@ -69,6 +69,12 @@ export enum StatTypeEnum {
   PENALTY_SCORED = "PENALTY_SCORED",
   PENALTY_CONCEDED = "PENALTY_CONCEDED",
   FREE_KICK_SCORED = "FREE_KICK_SCORED",
+  // Flair / Skill
+  NUTMEG = "NUTMEG",
+  NUTMEG_RECEIVED = "NUTMEG_RECEIVED",
+
+  LOB = "LOB",
+  LOB_RECEIVED = "LOB_RECEIVED",
 }
 
 export enum ImpactEnum {
