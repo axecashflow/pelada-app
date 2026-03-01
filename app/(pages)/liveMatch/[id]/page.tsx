@@ -70,6 +70,7 @@ import YellowCard from "./components/YellowCard";
 import SecondYellowCard from "./components/SecondYellowCard";
 import RedCard from "./components/RedCard";
 import Clearance from "./components/Clearance";
+import { MatchTimer } from "./components/MatchTimer";
 
 export default function LiveMatch() {
   const router = useRouter();
@@ -456,6 +457,8 @@ export default function LiveMatch() {
                   </div>
                 </div>
               </div>
+
+              <MatchTimer defaultMinutes={10} />
 
               <div className="flex flex-wrap gap-2">
                 {statCategories.map((cat) => (
