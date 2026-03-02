@@ -185,4 +185,20 @@ describe('GroupService', () => {
       );
     });
   });
+
+  describe('inviteManager', () => {
+    it('should call repository.addManager with provided ids', async () => {
+      const groupId = 'group-1';
+      const userId = 'user-2';
+
+      mockGroupRepository.addManager = jest.fn();
+
+      await groupService.inviteManager(groupId, userId);
+
+      expect(mockGroupRepository.addManager).toHaveBeenCalledWith(
+        groupId,
+        userId,
+      );
+    });
+  });
 });

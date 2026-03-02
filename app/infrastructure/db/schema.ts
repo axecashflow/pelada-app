@@ -1,26 +1,32 @@
-import {
-  pgTable,
-  text,
-  timestamp,
-  jsonb,
-} from 'drizzle-orm/pg-core';
+import { pgTable, text, timestamp, jsonb } from "drizzle-orm/pg-core";
 
-import { GameModePersistence } from '../repositories/types/GameModePersistence';
+import { GameModePersistence } from "../repositories/types/GameModePersistence";
 
-export const groups = pgTable('groups', {
-  id: text('id').primaryKey(),
-  name: text('name').notNull(),
-  gameMode: jsonb('game_mode').$type<GameModePersistence>().notNull(),
-  status: text('status').notNull(),
-  createdAt: timestamp('created_at').notNull(),
-  ownerId: text('owner_id').notNull().references(() => users.id),
+export const groups = pgTable("groups", {
+  id: text("id").primaryKey(),
+  name: text("name").notNull(),
+  gameMode: jsonb("game_mode").$type<GameModePersistence>().notNull(),
+  status: text("status").notNull(),
+  createdAt: timestamp("created_at").notNull(),
+  ownerId: text("owner_id")
+    .notNull()
+    .references(() => users.id),
 });
 
-export const members = pgTable('members', {
-  id: text('id').primaryKey(),
-  name: text('name').notNull(),
-  status: text('status').notNull(),
-  groupId: text('group_id')
+export const groupManagers = pgTable("group_managers", {
+  userId: text("user_id")
+    .notNull()
+    .references(() => users.id),
+  groupId: text("group_id")
+    .notNull()
+    .references(() => groups.id),
+});
+
+export const members = pgTable("members", {
+  id: text("id").primaryKey(),
+  name: text("name").notNull(),
+  status: text("status").notNull(),
+  groupId: text("group_id")
     .notNull()
     .references(() => groups.id),
 });
@@ -38,6 +44,7 @@ export const matches = pgTable("matches", {
   groupId: text("group_id")
     .notNull()
     .references(() => groups.id),
+  status: text('status').notNull(),
   matchDate: timestamp("match_date").notNull(),
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });

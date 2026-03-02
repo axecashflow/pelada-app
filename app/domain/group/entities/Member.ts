@@ -41,6 +41,12 @@ export class Member extends Entity<MemberId> {
     return this.props.status;
   }
 
+  changeName(newName: string): void {
+    this.validate({ ...this.props, name: newName });
+
+    this.props.name = newName;
+  }
+
   suspend(): void {
     if (this.props.status !== MemberStatusEnum.ACTIVE) {
       throw new DomainError('OnlyActiveMembersCanBeSuspended');

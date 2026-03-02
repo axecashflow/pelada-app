@@ -8,8 +8,12 @@ import { StatTypeEnum } from "@/app/domain/matches/enum/Stats";
 import { MatchEventRules } from "@/app/domain/matches/services/MatchEventRules";
 import { StatScorePolicy } from "@/app/domain/matches/services/StatScorePolicy";
 import { DomainError } from "@/app/domain/shared/DomainError";
-import { PlayerPosition, PlayerPresenceInMatch } from "@/app/domain/matches/enum/Player";
+import {
+  PlayerPosition,
+  PlayerPresenceInMatch,
+} from "@/app/domain/matches/enum/Player";
 import { GroupId } from "@/app/domain/group/value-objects/GroupId";
+import { MatchStatusEnum } from "@/app/domain/matches/enum/Match";
 
 import { Team } from "./Team";
 
@@ -18,6 +22,7 @@ interface MatchProps {
   teamA: Team;
   teamB: Team;
   stats: MatchStat[];
+  status?: MatchStatusEnum;
 }
 
 export class Match extends AggregateRoot<MatchId> {
@@ -28,8 +33,14 @@ export class Match extends AggregateRoot<MatchId> {
     this.props = props;
   }
 
-  static create(id: MatchId, groupId: GroupId, teamA: Team, teamB: Team): Match {
-    return new Match(id, { groupId, teamA, teamB, stats: [] });
+  static create(
+    id: MatchId,
+    groupId: GroupId,
+    teamA: Team,
+    teamB: Team,
+    status: MatchStatusEnum = MatchStatusEnum.LIVE,
+  ): Match {
+    return new Match(id, { groupId, teamA, teamB, stats: [], status });
   }
 
   get groupId(): GroupId {
@@ -48,10 +59,18 @@ export class Match extends AggregateRoot<MatchId> {
     return this.props.stats;
   }
 
+  get status(): MatchStatusEnum | undefined {
+    return this.props.status;
+  }
+
+  changeStatus(newStatus: MatchStatusEnum): void {
+    this.props.status = newStatus;
+  }
+
   private findPlayerInMatch(playerId: PlayerId): Player | undefined {
     return (
-      this.teamA.players.find(p => p.id.equals(playerId)) ||
-      this.teamB.players.find(p => p.id.equals(playerId))
+      this.teamA.players.find((p) => p.id.equals(playerId)) ||
+      this.teamB.players.find((p) => p.id.equals(playerId))
     );
   }
 
@@ -59,12 +78,12 @@ export class Match extends AggregateRoot<MatchId> {
     primaryPlayerId: PlayerId,
     statType: StatTypeEnum,
     opponentPlayerId?: PlayerId,
-    position?: PlayerPosition
+    position?: PlayerPosition,
   ): void {
     const primaryPlayer = this.findPlayerInMatch(primaryPlayerId);
 
     if (!primaryPlayer) {
-      throw new DomainError('PlayerNotFoundInTeam');
+      throw new DomainError("PlayerNotFoundInTeam");
     }
 
     const eventRule = MatchEventRules.getEventRule(statType);
@@ -84,10 +103,13 @@ export class Match extends AggregateRoot<MatchId> {
     primaryPlayer.updateScore(primaryPlayer.rating.add(primaryScoreDelta));
 
     if (eventRule.counterpart && opponentPlayerId) {
-      const counterpartPlayer = this.findPlayerInMatch(opponentPlayerId)
+      const counterpartPlayer = this.findPlayerInMatch(opponentPlayerId);
 
       if (counterpartPlayer) {
-        const counterpartWeight = StatScorePolicy.getWeight(eventRule.counterpart.type, position);
+        const counterpartWeight = StatScorePolicy.getWeight(
+          eventRule.counterpart.type,
+          position,
+        );
         const counterpartStat = MatchStat.create({
           playerId: counterpartPlayer.id,
           type: eventRule.counterpart.type,
@@ -98,17 +120,20 @@ export class Match extends AggregateRoot<MatchId> {
 
         this.props.stats.push(counterpartStat);
 
-        const counterpartScoreDelta = counterpartWeight * eventRule.counterpart.impact;
-        counterpartPlayer.updateScore(counterpartPlayer.rating.add(counterpartScoreDelta));
+        const counterpartScoreDelta =
+          counterpartWeight * eventRule.counterpart.impact;
+        counterpartPlayer.updateScore(
+          counterpartPlayer.rating.add(counterpartScoreDelta),
+        );
       }
     }
   }
 
   substitutePlayerInTeamA(playerOut: Player, playerIn: Player): void {
-    const player = this.teamA.players.find(p => p.id.equals(playerOut.id));
+    const player = this.teamA.players.find((p) => p.id.equals(playerOut.id));
 
     if (!player) {
-      throw new DomainError('PlayerNotFoundInTeam');
+      throw new DomainError("PlayerNotFoundInTeam");
     }
 
     player.changePresence(PlayerPresenceInMatch.SUBSTITUTED_OUT);
@@ -117,10 +142,10 @@ export class Match extends AggregateRoot<MatchId> {
   }
 
   substitutePlayerInTeamB(playerOut: Player, playerIn: Player): void {
-    const player = this.teamB.players.find(p => p.id.equals(playerOut.id));
+    const player = this.teamB.players.find((p) => p.id.equals(playerOut.id));
 
     if (!player) {
-      throw new DomainError('PlayerNotFoundInTeam');
+      throw new DomainError("PlayerNotFoundInTeam");
     }
 
     player.changePresence(PlayerPresenceInMatch.SUBSTITUTED_OUT);

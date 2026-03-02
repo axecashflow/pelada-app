@@ -6,6 +6,7 @@ import { MatchId } from "@/app/domain/matches/value-objects/MatchId";
 import { TeamId } from "@/app/domain/matches/value-objects/TeamId";
 import { PlayerId } from "@/app/domain/matches/value-objects/PlayerId";
 import { GroupId } from "@/app/domain/group/value-objects/GroupId";
+import { MatchStatusEnum } from "@/app/domain/matches/enum/Match";
 
 function makeSimpleMatch() {
   const teamA = Team.create(TeamId.create("team-a"));
@@ -32,6 +33,7 @@ describe("MatchMapper", () => {
     expect(persistence.teams).toHaveLength(2);
 
     const back = MatchMapper.toDomain({
+      status: MatchStatusEnum.LIVE,
       createdAt: new Date(),
       groupId: "g1",
       id: "m1",

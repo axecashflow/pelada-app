@@ -1,11 +1,11 @@
-import { GroupRepository } from '@/app/domain/group/repositories/GroupRepository';
-import { Group } from '@/app/domain/group/aggregates/Group';
-import { GameMode } from '@/app/domain/group/value-objects/GameMode';
-import { GameModeEnum } from '@/app/domain/group/enum/GameMode';
-import { GroupId } from '@/app/domain/group/value-objects/GroupId';
-import { Member } from '@/app/domain/group/entities/Member';
-import { MemberId } from '@/app/domain/group/value-objects/MemberId';
-import { DomainError } from '@/app/domain/shared/DomainError';
+import { GroupRepository } from "@/app/domain/group/repositories/GroupRepository";
+import { Group } from "@/app/domain/group/aggregates/Group";
+import { GameMode } from "@/app/domain/group/value-objects/GameMode";
+import { GameModeEnum } from "@/app/domain/group/enum/GameMode";
+import { GroupId } from "@/app/domain/group/value-objects/GroupId";
+import { Member } from "@/app/domain/group/entities/Member";
+import { MemberId } from "@/app/domain/group/value-objects/MemberId";
+import { DomainError } from "@/app/domain/shared/DomainError";
 
 type CreateGroupInput = {
   id: string;
@@ -15,7 +15,7 @@ type CreateGroupInput = {
     type: GameModeEnum;
     playersPerTeam: number;
   };
-}
+};
 
 type AddMemberToGroupInput = {
   groupId: string;
@@ -24,7 +24,7 @@ type AddMemberToGroupInput = {
 };
 
 export class GroupService {
-  constructor(private readonly groupRepository: GroupRepository) { }
+  constructor(private readonly groupRepository: GroupRepository) {}
 
   async createGroup(input: CreateGroupInput): Promise<void> {
     const gameMode = GameMode.create({
@@ -59,15 +59,23 @@ export class GroupService {
 
     const member = Member.create({
       id: MemberId.create(input.memberId),
-      name: input.memberName
+      name: input.memberName,
     });
 
     if (!group) {
-      throw new DomainError('GroupIdCannotBeEmpty');
+      throw new DomainError("GroupIdCannotBeEmpty");
     }
 
     group.addMember(member);
 
     await this.groupRepository.save(group);
+  }
+
+  async inviteManager(groupId: string, userId: string): Promise<void> {
+    await this.groupRepository.addManager(groupId, userId);
+  }
+
+  async getGroupsByManagerId(userId: string): Promise<Group[]> {
+    return await this.groupRepository.findGroupsByManagerId(userId);
   }
 }

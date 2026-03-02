@@ -8,28 +8,41 @@ import { PlayerScore } from "@/app/domain/matches/value-objects/PlayerScore";
 import { MatchStat } from "@/app/domain/matches/value-objects/MatchStat";
 import { StatWeight } from "@/app/domain/matches/value-objects/StatWeight";
 import { GroupId } from "@/app/domain/group/value-objects/GroupId";
-import { PlayerPosition, PlayerPresenceInMatch } from "@/app/domain/matches/enum/Player";
+import {
+  PlayerPosition,
+  PlayerPresenceInMatch,
+} from "@/app/domain/matches/enum/Player";
 import { StatTypeEnum, ImpactEnum } from "@/app/domain/matches/enum/Stats";
-import { MatchPersistence, TeamPersistence, MatchPlayerPersistence, MatchStatPersistence } from "../types/MatchPersistence";
+import { MatchStatusEnum } from "@/app/domain/matches/enum/Match";
+import {
+  MatchPersistence,
+  TeamPersistence,
+  MatchPlayerPersistence,
+  MatchStatPersistence,
+} from "../types/MatchPersistence";
 
 export class MatchMapper {
   static toDomain(persistence: MatchPersistence): Match {
     const groupId = GroupId.create(persistence.groupId);
     const matchId = MatchId.create(persistence.id);
 
-    const teamAData = persistence.teams.find(t => t.teamType === 'A');
-    const teamBData = persistence.teams.find(t => t.teamType === 'B');
+    const teamAData = persistence.teams.find((t) => t.teamType === "A");
+    const teamBData = persistence.teams.find((t) => t.teamType === "B");
 
     if (!teamAData || !teamBData) {
-      throw new Error('Invalid match data: missing teams');
+      throw new Error("Invalid match data: missing teams");
     }
 
     const teamA = MatchMapper.teamToDomain(teamAData);
     const teamB = MatchMapper.teamToDomain(teamBData);
 
-    const match = Match.create(matchId, groupId, teamA, teamB);
+    const matchStatus = persistence.status
+      ? (persistence.status as MatchStatusEnum)
+      : MatchStatusEnum.LIVE;
 
-    persistence.stats.forEach(statData => {
+    const match = Match.create(matchId, groupId, teamA, teamB, matchStatus);
+
+    persistence.stats.forEach((statData) => {
       const stat = MatchStat.create({
         playerId: PlayerId.create(statData.playerId),
         type: statData.type as StatTypeEnum,
@@ -37,7 +50,7 @@ export class MatchMapper {
         weight: StatWeight.create(parseFloat(statData.weight)),
         impact: parseInt(statData.impact) as ImpactEnum,
       });
-      match['props'].stats.push(stat);
+      match["props"].stats.push(stat);
     });
 
     return match;
@@ -46,11 +59,13 @@ export class MatchMapper {
   private static teamToDomain(teamData: TeamPersistence): Team {
     const team = Team.create(TeamId.create(teamData.id));
 
-    teamData.players.forEach(playerData => {
+    teamData.players.forEach((playerData) => {
       const player = Player.create(
         PlayerId.create(playerData.playerId),
         playerData.name,
-        playerData.position ? (playerData.position as PlayerPosition) : undefined
+        playerData.position
+          ? (playerData.position as PlayerPosition)
+          : undefined,
       );
 
       player.updateScore(PlayerScore.create(parseFloat(playerData.rating)));
@@ -63,7 +78,13 @@ export class MatchMapper {
   }
 
   static toPersistence(match: Match): {
-    match: { id: string; groupId: string; matchDate: Date; createdAt: Date };
+    match: {
+      id: string;
+      groupId: string;
+      matchDate: Date;
+      createdAt: Date;
+      status: MatchStatusEnum;
+    };
     teams: Array<{ id: string; matchId: string; teamType: string }>;
     players: MatchPlayerPersistence[];
     stats: MatchStatPersistence[];
@@ -71,8 +92,8 @@ export class MatchMapper {
     const matchDate = new Date();
 
     const teams = [
-      { id: match.teamA.id.value, matchId: match.id.value, teamType: 'A' },
-      { id: match.teamB.id.value, matchId: match.id.value, teamType: 'B' },
+      { id: match.teamA.id.value, matchId: match.id.value, teamType: "A" },
+      { id: match.teamB.id.value, matchId: match.id.value, teamType: "B" },
     ];
 
     const players: MatchPlayerPersistence[] = [
@@ -101,15 +122,16 @@ export class MatchMapper {
       matchId: match.id.value,
       playerId: stat.playerId.value,
       type: stat.type,
-      value: '1',
-      weight: stat['props'].weight.value.toString(),
-      impact: stat['props'].impact.toString(),
+      value: "1",
+      weight: stat["props"].weight.value.toString(),
+      impact: stat["props"].impact.toString(),
     }));
 
     return {
       match: {
         id: match.id.value,
         groupId: match.groupId.value,
+        status: match.status ?? MatchStatusEnum.LIVE,
         matchDate,
         createdAt: new Date(),
       },

@@ -1,13 +1,13 @@
-import { AggregateRoot } from '@/app/domain/shared/AggregateRoot';
-import { Member } from '../entities/Member';
-import { MemberId } from '../value-objects/MemberId';
-import { GameMode } from '../value-objects/GameMode';
-import { GroupStatusEnum } from '../enum/Group';
-import { GroupCreatedEvent } from '../events/GroupCreatedEvent';
-import { MemberAddedToGroupEvent } from '../events/MemberAddedToGroupEvent';
-import { MemberRemovedFromGroupEvent } from '../events/MemberRemovedFromGroupEvent';
-import { GroupId } from '../value-objects/GroupId';
-import { DomainError } from '../../shared/DomainError';
+import { AggregateRoot } from "@/app/domain/shared/AggregateRoot";
+import { Member } from "../entities/Member";
+import { MemberId } from "../value-objects/MemberId";
+import { GameMode } from "../value-objects/GameMode";
+import { GroupStatusEnum } from "../enum/Group";
+import { GroupCreatedEvent } from "../events/GroupCreatedEvent";
+import { MemberAddedToGroupEvent } from "../events/MemberAddedToGroupEvent";
+import { MemberRemovedFromGroupEvent } from "../events/MemberRemovedFromGroupEvent";
+import { GroupId } from "../value-objects/GroupId";
+import { DomainError } from "../../shared/DomainError";
 
 interface GroupProps {
   ownerId: string;
@@ -50,11 +50,11 @@ export class Group extends AggregateRoot<GroupId> {
 
   private validate(props: GroupProps): void {
     if (!props.name || props.name.trim().length === 0) {
-      throw new DomainError('GroupNameRequired');
+      throw new DomainError("GroupNameRequired");
     }
 
     if (!props.ownerId) {
-      throw new DomainError('GroupOwnerIdRequired');
+      throw new DomainError("GroupOwnerIdRequired");
     }
   }
 
@@ -82,17 +82,23 @@ export class Group extends AggregateRoot<GroupId> {
     return this.props.createdAt;
   }
 
+  changeName(newName: string): void {
+    this.validate({ ...this.props, name: newName });
+
+    this.props.name = newName;
+  }
+
   addMember(member: Member): void {
     if (this.props.status !== GroupStatusEnum.ACTIVE) {
-      throw new DomainError('GroupInactiveCannotAddMembers');
+      throw new DomainError("GroupInactiveCannotAddMembers");
     }
 
-    if (this.props.members.some(m => m.equals(member))) {
-      throw new DomainError('MemberAlreadyInGroup');
+    if (this.props.members.some((m) => m.equals(member))) {
+      throw new DomainError("MemberAlreadyInGroup");
     }
 
-    if (member.status === 'LEFT') {
-      throw new DomainError('MemberLeftGroupCannotRejoin');
+    if (member.status === "LEFT") {
+      throw new DomainError("MemberLeftGroupCannotRejoin");
     }
 
     this.props.members.push(member);
@@ -101,10 +107,10 @@ export class Group extends AggregateRoot<GroupId> {
   }
 
   removeMember(memberId: MemberId): void {
-    const member = this.props.members.find(m => m.id.equals(memberId));
+    const member = this.props.members.find((m) => m.id.equals(memberId));
 
     if (!member) {
-      throw new DomainError('MemberNotFound');
+      throw new DomainError("MemberNotFound");
     }
 
     member.leave();

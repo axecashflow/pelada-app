@@ -1,10 +1,20 @@
-'use client';
+"use client";
 
 import { useEffect, useState } from "react";
-import { motion } from 'framer-motion';
-import { Trophy, Users, Calendar, ArrowLeft, User, Swords, BarChart3 } from 'lucide-react';
-import { format } from 'date-fns';
-import { ptBR } from 'date-fns/locale';
+import { motion } from "framer-motion";
+import {
+  Trophy,
+  Users,
+  Calendar,
+  ArrowLeft,
+  User,
+  Swords,
+  BarChart3,
+  Check,
+  Share2,
+} from "lucide-react";
+import { format } from "date-fns";
+import { ptBR } from "date-fns/locale";
 import { useRouter, useParams } from "next/navigation";
 
 import { GroupViewModelType } from "@/app/application/group/view-models/types";
@@ -26,7 +36,29 @@ export default function GroupDetailsPage() {
   const params = useParams<GroupDetailsPageProps>();
 
   const [loading, setLoading] = useState(true);
-  const [currentGroup, setCurrentGroup] = useState<GroupViewModelType | null>(null);
+  const [copied, setCopied] = useState(false);
+  const [currentGroup, setCurrentGroup] = useState<GroupViewModelType | null>(
+    null,
+  );
+
+  const handleShareLink = async () => {
+    const fakeLink = `${process.env.NEXT_PUBLIC_BASE_URL}/invite/${currentGroup?.id}`;
+    try {
+      await navigator.clipboard.writeText(fakeLink);
+      setCopied(true);
+      toast({
+        title: "Link copiado!",
+        description: "Envie o link para convidar um gerente ao grupo.",
+      });
+      setTimeout(() => setCopied(false), 2000);
+    } catch {
+      toast({
+        title: "Não foi possível copiar",
+        description: fakeLink,
+        variant: "destructive",
+      });
+    }
+  };
 
   const handleGetGroupDetails = async () => {
     try {
@@ -35,59 +67,72 @@ export default function GroupDetailsPage() {
       setCurrentGroup(response);
     } catch (error) {
       toast({
-        title: 'Erro',
-        description: 'Não foi possível carregar os grupos. Tente novamente mais tarde.',
-        variant: 'destructive',
+        title: "Erro",
+        description:
+          "Não foi possível carregar os grupos. Tente novamente mais tarde.",
+        variant: "destructive",
       });
     } finally {
       setLoading(false);
     }
-  }
+  };
 
   useEffect(() => {
     handleGetGroupDetails();
   }, []);
 
   const renderHeaderTitle = () => {
-    if (loading) return (
-      <>
-        <div className="h-7 w-40 bg-muted animate-pulse rounded mb-1" />
-        <div className="h-4 w-24 bg-muted animate-pulse rounded" />
-      </>
-    );
+    if (loading)
+      return (
+        <>
+          <div className="h-7 w-40 bg-muted animate-pulse rounded mb-1" />
+          <div className="h-4 w-24 bg-muted animate-pulse rounded" />
+        </>
+      );
 
     return (
       <>
-        <h1 className="text-2xl font-bold text-foreground">{currentGroup!.name}</h1>
-        <p className="text-sm text-primary">{gameModeLabels[currentGroup!.gameMode.type]}</p>
+        <h1 className="text-2xl font-bold text-foreground">
+          {currentGroup!.name}
+        </h1>
+        <p className="text-sm text-primary">
+          {gameModeLabels[currentGroup!.gameMode.type]}
+        </p>
       </>
     );
-  }
+  };
 
   const renderContent = () => {
-    if (loading || !currentGroup) return (
-      <div className="px-6 py-6">
-        <div className="max-w-md mx-auto space-y-6">
-          <div className="grid grid-cols-2 gap-4">
-            {[1, 2].map((i) => (
-              <div key={i} className="p-4 rounded-xl bg-card border border-border">
-                <div className="h-3 w-20 bg-muted animate-pulse rounded mb-2" />
-                <div className="h-7 w-12 bg-muted animate-pulse rounded" />
-              </div>
-            ))}
-          </div>
-          <div className="h-5 w-16 bg-muted animate-pulse rounded" />
-          <div className="space-y-3">
-            {[1, 2, 3].map((i) => (
-              <div key={i} className="p-4 rounded-xl bg-card border border-border flex items-center gap-3">
-                <div className="w-10 h-10 rounded-full bg-muted animate-pulse flex-shrink-0" />
-                <div className="h-4 w-32 bg-muted animate-pulse rounded" />
-              </div>
-            ))}
+    if (loading || !currentGroup)
+      return (
+        <div className="px-6 py-6">
+          <div className="max-w-md mx-auto space-y-6">
+            <div className="grid grid-cols-2 gap-4">
+              {[1, 2].map((i) => (
+                <div
+                  key={i}
+                  className="p-4 rounded-xl bg-card border border-border"
+                >
+                  <div className="h-3 w-20 bg-muted animate-pulse rounded mb-2" />
+                  <div className="h-7 w-12 bg-muted animate-pulse rounded" />
+                </div>
+              ))}
+            </div>
+            <div className="h-5 w-16 bg-muted animate-pulse rounded" />
+            <div className="space-y-3">
+              {[1, 2, 3].map((i) => (
+                <div
+                  key={i}
+                  className="p-4 rounded-xl bg-card border border-border flex items-center gap-3"
+                >
+                  <div className="w-10 h-10 rounded-full bg-muted animate-pulse flex-shrink-0" />
+                  <div className="h-4 w-32 bg-muted animate-pulse rounded" />
+                </div>
+              ))}
+            </div>
           </div>
         </div>
-      </div>
-    );
+      );
 
     return (
       <>
@@ -102,9 +147,13 @@ export default function GroupDetailsPage() {
             <div className="p-4 rounded-xl bg-card border border-border">
               <div className="flex items-center gap-2 text-muted-foreground mb-1">
                 <Users className="w-4 h-4" />
-                <span className="text-xs uppercase tracking-wide">Jogadores</span>
+                <span className="text-xs uppercase tracking-wide">
+                  Jogadores
+                </span>
               </div>
-              <p className="text-2xl font-bold text-foreground">{activeMembers.length}</p>
+              <p className="text-2xl font-bold text-foreground">
+                {activeMembers.length}
+              </p>
             </div>
             <div className="p-4 rounded-xl bg-card border border-border">
               <div className="flex items-center gap-2 text-muted-foreground mb-1">
@@ -112,7 +161,7 @@ export default function GroupDetailsPage() {
                 <span className="text-xs uppercase tracking-wide">Criado</span>
               </div>
               <p className="text-2xl font-bold text-foreground">
-                {format(currentGroup.createdAt, 'dd/MM', { locale: ptBR })}
+                {format(currentGroup.createdAt, "dd/MM", { locale: ptBR })}
               </p>
             </div>
           </div>
@@ -143,12 +192,12 @@ export default function GroupDetailsPage() {
           </motion.div>
         </section>
       </>
-    )
+    );
   };
 
-  const activeMembers = currentGroup?.members.filter(
-    (m) => m.status === MemberStatusEnum.ACTIVE
-  ) ?? [];
+  const activeMembers =
+    currentGroup?.members.filter((m) => m.status === MemberStatusEnum.ACTIVE) ??
+    [];
 
   return (
     <div className="min-h-screen bg-background flex flex-col">
@@ -167,13 +216,27 @@ export default function GroupDetailsPage() {
             <span className="text-sm">Voltar</span>
           </button>
 
-          <div className="flex items-center gap-3">
-            <div className="w-12 h-12 rounded-xl gradient-primary flex items-center justify-center shadow-glow animate-pulse-glow">
-              <Trophy className="w-6 h-6 text-primary-foreground" />
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <div className="w-12 h-12 rounded-xl gradient-primary flex items-center justify-center shadow-glow animate-pulse-glow">
+                <Trophy className="w-6 h-6 text-primary-foreground" />
+              </div>
+              <div>{renderHeaderTitle()}</div>
             </div>
-            <div>
-              {renderHeaderTitle()}
-            </div>
+
+            {!loading && (
+              <button
+                onClick={handleShareLink}
+                className="w-10 h-10 rounded-xl bg-secondary border border-border flex items-center justify-center hover:bg-muted transition-colors"
+                title="Convidar gerente"
+              >
+                {copied ? (
+                  <Check className="w-5 h-5 text-primary" />
+                ) : (
+                  <Share2 className="w-5 h-5 text-muted-foreground" />
+                )}
+              </button>
+            )}
           </div>
         </motion.div>
       </header>

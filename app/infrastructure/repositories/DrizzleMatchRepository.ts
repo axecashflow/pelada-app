@@ -5,6 +5,7 @@ import { matches, teams, matchPlayers, matchStats } from "../db/schema";
 import { eq, and, gte, lte } from "drizzle-orm";
 import { MatchMapper } from "./mappers/MatchMapper";
 import { MatchPersistence } from "./types/MatchPersistence";
+import { MatchStatusEnum } from "@/app/domain/matches/enum/Match";
 
 export class DrizzleMatchRepository implements MatchRepository {
   async save(match: Match): Promise<void> {
@@ -23,13 +24,13 @@ export class DrizzleMatchRepository implements MatchRepository {
 
       await tx.delete(matchStats).where(eq(matchStats.matchId, match.id.value));
 
-      await tx.delete(matchPlayers).where(
-        eq(matchPlayers.teamId, persistence.teams[0].id)
-      );
+      await tx
+        .delete(matchPlayers)
+        .where(eq(matchPlayers.teamId, persistence.teams[0].id));
 
-      await tx.delete(matchPlayers).where(
-        eq(matchPlayers.teamId, persistence.teams[1].id)
-      );
+      await tx
+        .delete(matchPlayers)
+        .where(eq(matchPlayers.teamId, persistence.teams[1].id));
 
       await tx.delete(teams).where(eq(teams.matchId, match.id.value));
 
@@ -56,18 +57,13 @@ export class DrizzleMatchRepository implements MatchRepository {
       return null;
     }
 
-    const teamRows = await db
-      .select()
-      .from(teams)
-      .where(eq(teams.matchId, id));
+    const teamRows = await db.select().from(teams).where(eq(teams.matchId, id));
 
     if (teamRows.length === 0) {
       return null;
     }
 
-    const playerRows = await db
-      .select()
-      .from(matchPlayers);
+    const playerRows = await db.select().from(matchPlayers);
 
     const statRows = await db
       .select()
@@ -83,6 +79,7 @@ export class DrizzleMatchRepository implements MatchRepository {
       ...matchRow[0],
       teams: teamsWithPlayers,
       stats: statRows,
+      status: matchRow[0].status as MatchStatusEnum,
     };
 
     return MatchMapper.toDomain(matchPersistence);
@@ -102,25 +99,19 @@ export class DrizzleMatchRepository implements MatchRepository {
         and(
           eq(matches.groupId, groupId),
           gte(matches.matchDate, startOfDay),
-          lte(matches.matchDate, endOfDay)
-        )
+          lte(matches.matchDate, endOfDay),
+        ),
       );
 
     if (matchRows.length === 0) {
       return [];
     }
 
-    const teamRows = await db
-      .select()
-      .from(teams);
+    const teamRows = await db.select().from(teams);
 
-    const playerRows = await db
-      .select()
-      .from(matchPlayers);
+    const playerRows = await db.select().from(matchPlayers);
 
-    const statRows = await db
-      .select()
-      .from(matchStats);
+    const statRows = await db.select().from(matchStats);
 
     const matchPersistences: MatchPersistence[] = matchRows.map((matchRow) => {
       const matchTeams = teamRows.filter((t) => t.matchId === matchRow.id);
@@ -133,6 +124,7 @@ export class DrizzleMatchRepository implements MatchRepository {
         ...matchRow,
         teams: teamsWithPlayers,
         stats: statRows.filter((s) => s.matchId === matchRow.id),
+        status: matchRow.status as MatchStatusEnum,
       };
     });
 

@@ -1,4 +1,4 @@
-'use server';
+"use server";
 
 import { getServerSession } from "next-auth";
 
@@ -14,6 +14,9 @@ export async function getGroups() {
   const ownerId = user?.user.id!;
 
   const groups = await service.getGroupsByOwnerId(ownerId);
+  const groupsManaged = await service.getGroupsByManagerId(ownerId);
 
-  return groups.map(GroupViewModel.toObject);
+  const allGroups = [...groups, ...groupsManaged];
+
+  return allGroups.map(GroupViewModel.toObject);
 }

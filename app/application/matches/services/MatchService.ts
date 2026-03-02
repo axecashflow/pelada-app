@@ -10,6 +10,7 @@ import { StatTypeEnum } from "@/app/domain/matches/enum/Stats";
 import { PlayerPosition } from "@/app/domain/matches/enum/Player";
 import { DomainError } from "@/app/domain/shared/DomainError";
 import { PlayerViewModelType } from "../view-models/types";
+import { MatchStatusEnum } from "@/app/domain/matches/enum/Match";
 
 type PlayerInput = {
   id: string;
@@ -76,6 +77,20 @@ export class MatchService {
 
   async getMatchesFromDate(groupId: string, date: Date): Promise<Match[]> {
     return await this.matchRepository.findByDate(date, groupId);
+  }
+
+  async updateMatchStatus(
+    matchId: string,
+    newStatus: MatchStatusEnum,
+  ): Promise<void> {
+    const match = await this.matchRepository.findById(matchId);
+
+    if (!match) {
+      throw new DomainError("MatchNotFound");
+    }
+
+    match.changeStatus(newStatus);
+    await this.matchRepository.save(match);
   }
 
   async recordEvent(input: RecordEventInput): Promise<void> {
@@ -145,7 +160,7 @@ export class MatchService {
       PlayerId.create(playerIn.id),
       playerIn.name,
     );
-    
+
     const playerOutEntity = Player.create(
       PlayerId.create(playerOut.id),
       playerOut.name,

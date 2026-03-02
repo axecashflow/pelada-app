@@ -1,3 +1,5 @@
+import { MatchStatusEnum } from '@/app/domain/matches/enum/Match';
+
 export interface MatchPlayerPersistence {
   id: string;
   playerId: string;
@@ -25,9 +27,11 @@ export interface TeamPersistence {
   players: MatchPlayerPersistence[];
 }
 
+
 export interface MatchPersistence {
   id: string;
   groupId: string;
+  status: MatchStatusEnum;
   matchDate: Date;
   createdAt: Date;
   teams: TeamPersistence[];
