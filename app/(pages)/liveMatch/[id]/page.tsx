@@ -22,6 +22,7 @@ import {
   recordMatchEvents,
   getGroupDetails,
   substitutePlayer,
+  endMatch,
 } from "./actions";
 
 import {
@@ -201,6 +202,24 @@ export default function LiveMatch() {
       toast({
         title: "Erro",
         description: errorMessage,
+        variant: "destructive",
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleEndMatch = async () => {
+    if (!currentMatch) return;
+
+    setLoading(true);
+    try {
+      await endMatch(currentMatch.id);
+      router.replace(`/group/${currentMatch.groupId}`);
+    } catch (error) {
+      toast({
+        title: "Erro",
+        description: "Não foi possível terminar a partida.",
         variant: "destructive",
       });
     } finally {
@@ -521,11 +540,7 @@ export default function LiveMatch() {
           className="px-6 py-6 border-t border-border bg-card"
         >
           <div className="max-w-2xl mx-auto">
-            <SportButton
-              onClick={() => router.push(`/group/${currentMatch?.groupId}`)}
-              size="lg"
-              className="w-full"
-            >
+            <SportButton onClick={handleEndMatch} size="lg" className="w-full">
               <Check className="w-5 h-5 mr-2" />
               Terminar Partida
             </SportButton>

@@ -2,7 +2,7 @@ import { GroupRepository } from "@/app/domain/group/repositories/GroupRepository
 import { Group } from "@/app/domain/group/aggregates/Group";
 
 import { db } from "../db/connection";
-import { groups, members } from "../db/schema";
+import { groups, members, memberUserLink } from "../db/schema";
 import { groupManagers } from "../db/schema";
 import { eq, inArray } from "drizzle-orm";
 
@@ -24,6 +24,13 @@ export class DrizzleGroupRepository implements GroupRepository {
           },
         });
 
+      await tx.delete(memberUserLink).where(
+        inArray(
+          memberUserLink.memberId,
+          group.members.map((m) => m.id.value),
+        ),
+      );
+
       await tx.delete(members).where(eq(members.groupId, group.id.value));
 
       if (group.members.length > 0) {
@@ -35,6 +42,17 @@ export class DrizzleGroupRepository implements GroupRepository {
             groupId: group.id.value,
           })),
         );
+
+        const userLinksToInsert = group.members
+          .filter((member) => member.userLink)
+          .map((member) => ({
+            memberId: member.id.value,
+            userId: member.userLink!.userId.value,
+          }));
+
+        if (userLinksToInsert.length > 0) {
+          await tx.insert(memberUserLink).values(userLinksToInsert);
+        }
       }
     });
   }
@@ -51,9 +69,24 @@ export class DrizzleGroupRepository implements GroupRepository {
       .from(members)
       .where(eq(members.groupId, id));
 
+    const userLinkRows = await db
+      .select()
+      .from(memberUserLink)
+      .where(
+        inArray(
+          memberUserLink.memberId,
+          memberRows.map((m) => m.id),
+        ),
+      );
+
+    const memberRowsWithLinks = memberRows.map((memberRow) => ({
+      ...memberRow,
+      userLink: userLinkRows.find((link) => link.memberId === memberRow.id),
+    }));
+
     const persistence: GroupPersistence = {
       ...groupRows[0],
-      members: memberRows,
+      members: memberRowsWithLinks,
     };
 
     return GroupMapper.toDomain(persistence);

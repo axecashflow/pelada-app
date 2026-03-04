@@ -4,4 +4,5 @@ export interface MatchRepository {
   save(match: Match): Promise<void>;
   findById(id: string): Promise<Match | null>;
   findByDate(date: Date, groupId: string): Promise<Match[]>;
+  findLiveMatch(groupId: string): Promise<Match | null>;
 }

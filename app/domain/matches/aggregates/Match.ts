@@ -8,14 +8,18 @@ import { StatTypeEnum } from "@/app/domain/matches/enum/Stats";
 import { MatchEventRules } from "@/app/domain/matches/services/MatchEventRules";
 import { StatScorePolicy } from "@/app/domain/matches/services/StatScorePolicy";
 import { DomainError } from "@/app/domain/shared/DomainError";
+
 import {
   PlayerPosition,
   PlayerPresenceInMatch,
 } from "@/app/domain/matches/enum/Player";
+
 import { GroupId } from "@/app/domain/group/value-objects/GroupId";
 import { MatchStatusEnum } from "@/app/domain/matches/enum/Match";
+import { MatchStatRecordedEvent } from "@/app/domain/matches/events/MatchStatRecordedEvent";
 
 import { Team } from "./Team";
+import { MatchPlayedRecordedEvent } from "../events/MatchPlayedRecordedEvent";
 
 interface MatchProps {
   groupId: GroupId;
@@ -99,6 +103,15 @@ export class Match extends AggregateRoot<MatchId> {
 
     this.props.stats.push(primaryStat);
 
+    this.addDomainEvent(
+      MatchStatRecordedEvent.create(
+        this.id.value,
+        this.groupId.value,
+        primaryPlayerId.value,
+        eventRule.primary.type,
+      ),
+    );
+
     const primaryScoreDelta = primaryWeight * eventRule.primary.impact;
     primaryPlayer.updateScore(primaryPlayer.rating.add(primaryScoreDelta));
 
@@ -120,6 +133,15 @@ export class Match extends AggregateRoot<MatchId> {
 
         this.props.stats.push(counterpartStat);
 
+        this.addDomainEvent(
+          MatchStatRecordedEvent.create(
+            this.id.value,
+            this.groupId.value,
+            opponentPlayerId.value,
+            eventRule.counterpart.type,
+          ),
+        );
+
         const counterpartScoreDelta =
           counterpartWeight * eventRule.counterpart.impact;
         counterpartPlayer.updateScore(
@@ -127,6 +149,30 @@ export class Match extends AggregateRoot<MatchId> {
         );
       }
     }
+  }
+
+  addPlayerToTeamA(player: Player): void {
+    this.teamA.addPlayer(player);
+
+    this.addDomainEvent(
+      MatchPlayedRecordedEvent.create(
+        this.id.value,
+        this.groupId.value,
+        player.id.value,
+      ),
+    );
+  }
+
+  addPlayerToTeamB(player: Player): void {
+    this.teamB.addPlayer(player);
+
+    this.addDomainEvent(
+      MatchPlayedRecordedEvent.create(
+        this.id.value,
+        this.groupId.value,
+        player.id.value,
+      ),
+    );
   }
 
   substitutePlayerInTeamA(playerOut: Player, playerIn: Player): void {

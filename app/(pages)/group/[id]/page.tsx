@@ -12,19 +12,22 @@ import {
   BarChart3,
   Check,
   Share2,
+  Radio,
 } from "lucide-react";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { useRouter, useParams } from "next/navigation";
 
 import { GroupViewModelType } from "@/app/application/group/view-models/types";
+import { MatchViewModelType } from "@/app/application/matches/view-models/types";
 import { MemberStatusEnum } from "@/app/domain/group/enum/Member";
 import { MemberCard } from "@/app/ui/components/MemberCard";
 import { SportButton } from "@/app/ui/components/SportButton";
 import { useToast } from "@/app/ui/hooks/use-toast";
 
 import { gameModeLabels } from "../utils";
-import { getGroupDetails } from "./actions";
+import { getGroupDetails, findLiveMatch, linkUser } from "./actions";
+import { GameModeEnum } from "@/app/domain/group/enum/GameMode";
 
 type GroupDetailsPageProps = {
   id: string;
@@ -40,6 +43,7 @@ export default function GroupDetailsPage() {
   const [currentGroup, setCurrentGroup] = useState<GroupViewModelType | null>(
     null,
   );
+  const [liveMatch, setLiveMatch] = useState<MatchViewModelType | null>(null);
 
   const handleShareLink = async () => {
     const fakeLink = `${process.env.NEXT_PUBLIC_BASE_URL}/invite/${currentGroup?.id}`;
@@ -65,11 +69,30 @@ export default function GroupDetailsPage() {
       const response = await getGroupDetails(params.id);
 
       setCurrentGroup(response);
+
+      const live = await findLiveMatch(params.id);
+      setLiveMatch(live);
     } catch (error) {
       toast({
         title: "Erro",
         description:
           "Não foi possível carregar os grupos. Tente novamente mais tarde.",
+        variant: "destructive",
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleClaimMemberStats = async (memberId: string) => {
+    try {
+      setLoading(true);
+      await linkUser(memberId, currentGroup!.id);
+      handleGetGroupDetails();
+    } catch (error) {
+      toast({
+        title: "Erro",
+        description: "Nao foi possivel carregar as estatisticas",
         variant: "destructive",
       });
     } finally {
@@ -93,10 +116,10 @@ export default function GroupDetailsPage() {
     return (
       <>
         <h1 className="text-2xl font-bold text-foreground">
-          {currentGroup!.name}
+          {currentGroup?.name}
         </h1>
         <p className="text-sm text-primary">
-          {gameModeLabels[currentGroup!.gameMode.type]}
+          {gameModeLabels[currentGroup?.gameMode.type ?? GameModeEnum.ROTATION]}
         </p>
       </>
     );
@@ -185,7 +208,11 @@ export default function GroupDetailsPage() {
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: 0.1 + index * 0.05 }}
                 >
-                  <MemberCard member={member} />
+                  <MemberCard
+                    member={member}
+                    onClaim={handleClaimMemberStats}
+                    isClaimed={member.userLink !== undefined}
+                  />
                 </motion.div>
               ))}
             </div>
@@ -209,7 +236,7 @@ export default function GroupDetailsPage() {
           className="max-w-md mx-auto"
         >
           <button
-            onClick={() => router.back()}
+            onClick={() => router.push('/group')}
             className="flex items-center gap-2 text-muted-foreground hover:text-foreground transition-colors mb-4"
           >
             <ArrowLeft className="w-4 h-4" />
@@ -241,13 +268,23 @@ export default function GroupDetailsPage() {
         </motion.div>
       </header>
 
-      <div className="flex-1 overflow-y-auto pt-[150px] pb-[160px]">
+      <div className="flex-1 overflow-y-auto pt-[150px] pb-[210px]">
         {renderContent()}
       </div>
 
       {/* Footer */}
       <footer className="fixed bottom-0 left-0 right-0 px-6 py-6 border-t border-border bg-card z-10">
         <div className="max-w-md mx-auto space-y-3">
+          {liveMatch && (
+            <SportButton
+              onClick={() => router.push(`/liveMatch/${liveMatch.id}`)}
+              className="w-full bg-destructive hover:bg-destructive/90 text-destructive-foreground"
+            >
+              <Radio className="w-4 h-4 mr-2" />
+              Partida ao Vivo — Acompanhar
+            </SportButton>
+          )}
+
           <div className="flex gap-3">
             <SportButton
               variant="secondary"

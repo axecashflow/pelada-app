@@ -8,6 +8,7 @@ import { MemberAddedToGroupEvent } from "../events/MemberAddedToGroupEvent";
 import { MemberRemovedFromGroupEvent } from "../events/MemberRemovedFromGroupEvent";
 import { GroupId } from "../value-objects/GroupId";
 import { DomainError } from "../../shared/DomainError";
+import { UserId } from "../value-objects/UserId";
 
 interface GroupProps {
   ownerId: string;
@@ -124,5 +125,27 @@ export class Group extends AggregateRoot<GroupId> {
 
   activate(): void {
     this.props.status = GroupStatusEnum.ACTIVE;
+  }
+
+  linkUser(userId: UserId, memberId: MemberId): void {
+    const member = this.props.members.find((m) => m.id.equals(memberId));
+
+    if (!member) {
+      throw new DomainError("MemberNotFound");
+    }
+
+    this.unlinkUser(userId);
+
+    member.linkUser(userId);
+  }
+
+  unlinkUser(userId: UserId): void {
+    const memberWithUserId = this.props.members.filter((m) =>
+      m.userLink?.userId.equals(userId),
+    );
+
+    memberWithUserId?.forEach((m) => {
+      m.unlinkUser();
+    });
   }
 }

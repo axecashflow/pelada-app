@@ -1,11 +1,15 @@
-import { Entity } from '@/app/domain/shared/Entity';
-import { MemberId } from '../value-objects/MemberId';
-import { MemberStatusEnum } from '../enum/Member';
-import { DomainError } from '../../shared/DomainError';
+import { Entity } from "@/app/domain/shared/Entity";
+import { MemberId } from "../value-objects/MemberId";
+import { MemberStatusEnum } from "../enum/Member";
+import { DomainError } from "../../shared/DomainError";
+
+import { MemberUserLink } from "../value-objects/MemberUserLink";
+import { UserId } from "../value-objects/UserId";
 
 interface MemberProps {
   name: string;
   status: MemberStatusEnum;
+  userLink?: MemberUserLink;
 }
 
 export class Member extends Entity<MemberId> {
@@ -20,16 +24,21 @@ export class Member extends Entity<MemberId> {
   static create(params: {
     id: MemberId;
     name: string;
+    userLink?: MemberUserLink;
   }): Member {
     return new Member(params.id, {
       name: params.name,
       status: MemberStatusEnum.ACTIVE,
+      userLink: params.userLink,
     });
+  }
+  get userLink(): MemberUserLink | undefined {
+    return this.props.userLink;
   }
 
   private validate(props: MemberProps): void {
     if (!props.name || props.name.trim().length === 0) {
-      throw new DomainError('MemberNameRequired');
+      throw new DomainError("MemberNameRequired");
     }
   }
 
@@ -47,9 +56,21 @@ export class Member extends Entity<MemberId> {
     this.props.name = newName;
   }
 
+  linkUser(userId: UserId): void {
+    if (this.props.userLink) {
+      throw new DomainError("MemberAlreadyInGroup");
+    }
+
+    this.props.userLink = MemberUserLink.create(userId, this.id);
+  }
+
+  unlinkUser(): void {
+    this.props.userLink = undefined;
+  }
+
   suspend(): void {
     if (this.props.status !== MemberStatusEnum.ACTIVE) {
-      throw new DomainError('OnlyActiveMembersCanBeSuspended');
+      throw new DomainError("OnlyActiveMembersCanBeSuspended");
     }
 
     this.props.status = MemberStatusEnum.SUSPENDED;
@@ -57,7 +78,7 @@ export class Member extends Entity<MemberId> {
 
   activate(): void {
     if (this.props.status === MemberStatusEnum.LEFT) {
-      throw new DomainError('CannotActivateMemberThatLeftGroup');
+      throw new DomainError("CannotActivateMemberThatLeftGroup");
     }
 
     this.props.status = MemberStatusEnum.ACTIVE;
@@ -65,7 +86,7 @@ export class Member extends Entity<MemberId> {
 
   deactivate(): void {
     if (this.props.status !== MemberStatusEnum.ACTIVE) {
-      throw new DomainError('CannotDeactivateMembersNotActive');
+      throw new DomainError("CannotDeactivateMembersNotActive");
     }
 
     this.props.status = MemberStatusEnum.INACTIVE;

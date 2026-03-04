@@ -19,6 +19,7 @@ export class DrizzleMatchRepository implements MatchRepository {
           target: matches.id,
           set: {
             matchDate: persistence.match.matchDate,
+            status: persistence.match.status,
           },
         });
 
@@ -129,5 +130,52 @@ export class DrizzleMatchRepository implements MatchRepository {
     });
 
     return matchPersistences.map(MatchMapper.toDomain);
+  }
+
+  async findLiveMatch(groupId: string): Promise<Match | null> {
+    const matchRow = await db
+      .select()
+      .from(matches)
+      .where(
+        and(
+          eq(matches.groupId, groupId),
+          eq(matches.status, MatchStatusEnum.LIVE),
+        ),
+      )
+      .limit(1);
+
+    if (matchRow.length === 0) {
+      return null;
+    }
+
+    const teamRows = await db
+      .select()
+      .from(teams)
+      .where(eq(teams.matchId, matchRow[0].id));
+
+    if (teamRows.length === 0) {
+      return null;
+    }
+
+    const playerRows = await db.select().from(matchPlayers);
+
+    const statRows = await db
+      .select()
+      .from(matchStats)
+      .where(eq(matchStats.matchId, matchRow[0].id));
+
+    const teamsWithPlayers = teamRows.map((team) => ({
+      ...team,
+      players: playerRows.filter((p) => p.teamId === team.id),
+    }));
+
+    const matchPersistence: MatchPersistence = {
+      ...matchRow[0],
+      teams: teamsWithPlayers,
+      stats: statRows,
+      status: matchRow[0].status as MatchStatusEnum,
+    };
+
+    return MatchMapper.toDomain(matchPersistence);
   }
 }

@@ -11,6 +11,7 @@ import { PlayerPosition } from "@/app/domain/matches/enum/Player";
 import { DomainError } from "@/app/domain/shared/DomainError";
 import { PlayerViewModelType } from "../view-models/types";
 import { MatchStatusEnum } from "@/app/domain/matches/enum/Match";
+import { DomainEventDispatcher } from "@/app/domain/shared/DomainEventDispatcher";
 
 type PlayerInput = {
   id: string;
@@ -39,27 +40,23 @@ type RecordEventInput = {
 };
 
 export class MatchService {
-  constructor(private readonly matchRepository: MatchRepository) {}
+  constructor(
+    private readonly matchRepository: MatchRepository,
+    private readonly domainEventDispatcher: DomainEventDispatcher,
+  ) {}
 
   async createMatch(input: CreateMatchInput): Promise<void> {
+    const existingLive = await this.matchRepository.findLiveMatch(
+      input.groupId,
+    );
+
+    if (existingLive) {
+      existingLive.changeStatus(MatchStatusEnum.FINISHED);
+      await this.matchRepository.save(existingLive);
+    }
+
     const teamA = Team.create(TeamId.create(input.teamA.id));
     const teamB = Team.create(TeamId.create(input.teamB.id));
-
-    input.teamA.players.forEach((playerData) => {
-      const player = Player.create(
-        PlayerId.create(playerData.id),
-        playerData.name,
-      );
-      teamA.addPlayer(player);
-    });
-
-    input.teamB.players.forEach((playerData) => {
-      const player = Player.create(
-        PlayerId.create(playerData.id),
-        playerData.name,
-      );
-      teamB.addPlayer(player);
-    });
 
     const match = Match.create(
       MatchId.create(input.id),
@@ -68,7 +65,28 @@ export class MatchService {
       teamB,
     );
 
+    input.teamA.players.forEach((playerData) => {
+      const player = Player.create(
+        PlayerId.create(playerData.id),
+        playerData.name,
+      );
+
+      match.addPlayerToTeamA(player);
+    });
+
+    input.teamB.players.forEach((playerData) => {
+      const player = Player.create(
+        PlayerId.create(playerData.id),
+        playerData.name,
+      );
+
+      match.addPlayerToTeamB(player);
+    });
+
     await this.matchRepository.save(match);
+
+    const domainEvents = match.pullDomainEvents();
+    await this.domainEventDispatcher.dispatch(domainEvents);
   }
 
   async getMatchById(id: string): Promise<Match | null> {
@@ -113,6 +131,9 @@ export class MatchService {
     );
 
     await this.matchRepository.save(match);
+
+    const domainEvents = match.pullDomainEvents();
+    await this.domainEventDispatcher.dispatch(domainEvents);
   }
 
   async recordEvents(events: RecordEventInput[]): Promise<void> {
@@ -142,6 +163,9 @@ export class MatchService {
     }
 
     await this.matchRepository.save(match);
+
+    const domainEvents = match.pullDomainEvents();
+    await this.domainEventDispatcher.dispatch(domainEvents);
   }
 
   async substitutePlayer(
@@ -177,5 +201,12 @@ export class MatchService {
     }
 
     await this.matchRepository.save(match);
+
+    const domainEvents = match.pullDomainEvents();
+    await this.domainEventDispatcher.dispatch(domainEvents);
+  }
+
+  async findLiveMatch(groupId: string): Promise<Match | null> {
+    return await this.matchRepository.findLiveMatch(groupId);
   }
 }

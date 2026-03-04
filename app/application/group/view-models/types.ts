@@ -5,6 +5,7 @@ export type MemberViewModelType = {
   id: string;
   name: string;
   status: MemberStatusEnum;
+  userLink?: string;
 };
 
 export type GameModeViewModelType = {

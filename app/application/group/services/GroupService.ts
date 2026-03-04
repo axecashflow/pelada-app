@@ -6,6 +6,7 @@ import { GroupId } from "@/app/domain/group/value-objects/GroupId";
 import { Member } from "@/app/domain/group/entities/Member";
 import { MemberId } from "@/app/domain/group/value-objects/MemberId";
 import { DomainError } from "@/app/domain/shared/DomainError";
+import { UserId } from "@/app/domain/group/value-objects/UserId";
 
 type CreateGroupInput = {
   id: string;
@@ -77,5 +78,24 @@ export class GroupService {
 
   async getGroupsByManagerId(userId: string): Promise<Group[]> {
     return await this.groupRepository.findGroupsByManagerId(userId);
+  }
+
+  async linkMemberToUser(
+    userId: string,
+    memberId: string,
+    groupId: string,
+  ): Promise<void> {
+    const group = await this.groupRepository.findById(groupId);
+
+    if (!group) {
+      throw new DomainError("GroupIdCannotBeEmpty");
+    }
+
+    const userIdVo = UserId.create(userId);
+    const memberIdVo = MemberId.create(memberId);
+
+    group.linkUser(userIdVo, memberIdVo);
+
+    await this.groupRepository.save(group);
   }
 }

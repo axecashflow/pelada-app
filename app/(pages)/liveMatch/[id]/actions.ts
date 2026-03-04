@@ -4,6 +4,7 @@ import makeMatchService from "@/app/application/matches/factories/makeMatchServi
 import { MatchViewModel } from "@/app/application/matches/view-models/MatchViewModel";
 import makeGroupService from "@/app/application/group/factories/makeGroupService";
 import { GroupViewModel } from "@/app/application/group/view-models/GroupViewModel";
+import { MatchStatusEnum } from "@/app/domain/matches/enum/Match";
 
 import { RecordEventInputType, SubstitutionFormType } from "./types";
 
@@ -36,4 +37,8 @@ export async function substitutePlayer(
     input.playerOut,
     input.playerIn,
   );
+}
+
+export async function endMatch(matchId: string) {
+  await matchService.updateMatchStatus(matchId, MatchStatusEnum.FINISHED);
 }

@@ -5,6 +5,8 @@ import { GameModeMapper } from "./GameModeMapper";
 import { GroupPersistence } from "../types/GroupPersistence";
 import { GroupId } from "@/app/domain/group/value-objects/GroupId";
 import { MemberStatusEnum } from "@/app/domain/group/enum/Member";
+import { MemberUserLink } from "@/app/domain/group/value-objects/MemberUserLink";
+import { UserId } from "@/app/domain/group/value-objects/UserId";
 import { m } from "framer-motion";
 
 export class GroupMapper {
@@ -35,9 +37,19 @@ export class GroupMapper {
 
     if (raw.members) {
       raw.members.forEach(m => {
+        let userLink: MemberUserLink | undefined;
+
+        if (m.userLink && m.userLink.userId) {
+          userLink = MemberUserLink.create(
+            UserId.create(m.userLink.userId),
+            MemberId.create(m.id)
+          );
+        }
+
         const member = Member.create({
           id: MemberId.create(m.id),
           name: m.name,
+          userLink,
         });
 
         if (m.status === MemberStatusEnum.INACTIVE) {

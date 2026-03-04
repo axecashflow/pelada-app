@@ -6,6 +6,7 @@ export class MemberViewModel {
       id: member.id.value,
       name: member.name,
       status: member.status,
+      userLink: member.userLink ? member.userLink.userId.value : undefined
     }
   }
 }

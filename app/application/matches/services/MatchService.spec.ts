@@ -10,19 +10,27 @@ import { GroupId } from '@/app/domain/group/value-objects/GroupId';
 import { StatTypeEnum } from '@/app/domain/matches/enum/Stats';
 import { PlayerPosition } from '@/app/domain/matches/enum/Player';
 import { DomainError } from '@/app/domain/shared/DomainError';
+import { MatchStatusEnum } from '@/app/domain/matches/enum/Match';
+import { DomainEventDispatcher } from '@/app/domain/shared/DomainEventDispatcher';
 
 describe('MatchService', () => {
   let matchService: MatchService;
   let mockMatchRepository: jest.Mocked<MatchRepository>;
+  let mockDomainEventDispatcher: jest.Mocked<DomainEventDispatcher>;
 
   beforeEach(() => {
     mockMatchRepository = {
       save: jest.fn(),
       findByDate: jest.fn(),
       findById: jest.fn(),
+      findLiveMatch: jest.fn(),
     } as any;
 
-    matchService = new MatchService(mockMatchRepository);
+    mockDomainEventDispatcher = {
+      dispatch: jest.fn(),
+    } as any;
+
+    matchService = new MatchService(mockMatchRepository, mockDomainEventDispatcher);
   });
 
   describe('createMatch', () => {
@@ -59,6 +67,33 @@ describe('MatchService', () => {
       expect(savedMatch.teamB.players).toHaveLength(2);
       expect(savedMatch.teamA.players[0].name).toBe('Player 1');
       expect(savedMatch.teamB.players[0].name).toBe('Player 3');
+    });
+
+    it('should finish existing live match before creating a new one', async () => {
+      const input = {
+        id: 'match-2',
+        groupId: 'group-1',
+        teamA: { id: 'team-a', players: [] },
+        teamB: { id: 'team-b', players: [] },
+      };
+
+      const existing = Match.create(
+        MatchId.create('match-1'),
+        GroupId.create(input.groupId),
+        Team.create(TeamId.create('team-a')),
+        Team.create(TeamId.create('team-b')),
+      );
+      existing.changeStatus(MatchStatusEnum.LIVE);
+
+      mockMatchRepository.findLiveMatch = jest.fn().mockResolvedValue(existing);
+
+      await matchService.createMatch(input);
+
+      // should have saved twice: once to finish existing, once to save new
+      expect(mockMatchRepository.save).toHaveBeenCalledTimes(2);
+      // first call should have ended the existing match
+      const firstSaved = mockMatchRepository.save.mock.calls[0][0];
+      expect(firstSaved.status).toBe(MatchStatusEnum.FINISHED);
     });
 
     it('should create match with empty teams', async () => {

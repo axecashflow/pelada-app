@@ -1,6 +1,7 @@
 import { DomainError } from "@/app/domain/shared/DomainError";
 import { Hasher } from "@/app/domain/shared/Hasher";
 import { User } from "@/app/domain/users/aggregates/User";
+import { ProfileStatsRepository } from "@/app/domain/users/repositories/ProfileStatsRepository";
 import { UserRepository } from "@/app/domain/users/repositories/UserRepository";
 import { Email } from "@/app/domain/users/values-objects/Email";
 import { Password } from "@/app/domain/users/values-objects/Password";
@@ -12,13 +13,14 @@ type CreateUserInput = {
   email: string;
   username: string;
   password: string;
-}
+};
 
 export class UserService {
   constructor(
     private readonly userRepository: UserRepository,
     private readonly hasher: Hasher,
-  ) { }
+    private readonly profileStatsRepository: ProfileStatsRepository,
+  ) {}
 
   async createUser(input: CreateUserInput) {
     const user = User.create({
@@ -36,9 +38,7 @@ export class UserService {
     const usernameVo = Username.create(username);
     const passwordVo = Password.create(password);
 
-    const user = await this.userRepository.findByUsername(
-      usernameVo,
-    );
+    const user = await this.userRepository.findByUsername(usernameVo);
 
     if (!user) {
       throw new DomainError("UsernameNotFound");
@@ -48,7 +48,7 @@ export class UserService {
 
     const isPasswordValid = await this.hasher.compare(
       passwordVo.value,
-      hashedPassword ?? ''
+      hashedPassword ?? "",
     );
 
     if (!isPasswordValid) {
@@ -56,5 +56,20 @@ export class UserService {
     }
 
     return user;
+  }
+
+  async getProfileStats(userId: string) {
+    const userIdVo = UserId.create(userId);
+
+    const profileStats =
+      await this.profileStatsRepository.findByUserId(userIdVo);
+
+    return profileStats;
+  }
+
+  async getUser(userId: string) {
+    const userIdVo = UserId.create(userId);
+
+    return await this.userRepository.findById(userIdVo);
   }
 }
